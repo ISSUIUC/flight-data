@@ -1,7 +1,7 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 
-df = pd.read_csv("../SD_DECODER/trimmed.csv")
+df = pd.read_csv("./trimmed.csv")
 
 timestamp_seconds = df.timestamp/1000
 
