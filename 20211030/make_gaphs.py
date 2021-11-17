@@ -15,9 +15,9 @@ timestamp_seconds = df.timestamp/1000
 #   gx: angular velocity on the x axis
 #   gy: angular velocity on the y axis (roll)
 #   gz: angular velocity on the z axis
-#   mx: angular acceleration on the x axis
-#   my: angular acceleration on the y axis (roll)
-#   mz: angular acceleration on the z axis
+#   mx: magnetometer(compass) direction on the x axis
+#   my: magnetometer(compass) direction on the y axis (roll)
+#   mz: magnetometer(compass) direction on the z axis
 
 # gps data:
 #   latitude: gps latitude (degrees)
