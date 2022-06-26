@@ -225,6 +225,7 @@ int main(int argc, char ** argv) {
     << "state_data.x" << ","
     << "state_data.vx" << ","
     << "state_data.ax" << ","
+    << "state_data.apo" << ","
     << "state_data.timestamp" << ",";
 
     output

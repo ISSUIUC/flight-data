@@ -68,6 +68,7 @@ void reformat(std::ofstream file, const rapidcsv::Document & doc, size_t step, s
     auto state_x = doc.GetColumn<double>("state_data.x");
     auto state_vx = doc.GetColumn<double>("state_data.vx");
     auto state_ax = doc.GetColumn<double>("state_data.ax");
+    auto state_apo = doc.GetColumn<double>("state_data.apo");
 
     auto has_voltage_data = doc.GetColumn<size_t>("has_voltage_data");
     auto voltage_battery = doc.GetColumn<double>("voltage_data.battery_voltage");
@@ -107,6 +108,7 @@ void reformat(std::ofstream file, const rapidcsv::Document & doc, size_t step, s
     file << "state_est_x" << ",";
     file << "state_est_vx" << ",";
     file << "state_est_ax" << ",";
+    file << "state_est_apo" << ",";
 
     file << "battery_voltage" << "\n";
 
@@ -152,6 +154,7 @@ void reformat(std::ofstream file, const rapidcsv::Document & doc, size_t step, s
         file << state_x[state_index] << ",";
         file << state_vx[state_index] << ",";
         file << state_ax[state_index] << ",";
+        file << state_apo[state_index] << ",";
 
         file << voltage_battery[voltage_index] << "\n";
     }
