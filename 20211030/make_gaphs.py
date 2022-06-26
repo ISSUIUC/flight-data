@@ -62,8 +62,12 @@ def trim_descent_only(array):
 
 # ascent only example
 timestamps_ascent = trim_ascent_only(timestamp_seconds)
-baro_altitude_ascent = trim_ascent_only(df.barometer_altitude)
-plt.plot(timestamps_ascent, baro_altitude_ascent)
+ax = trim_ascent_only(df.ax)
+ay = trim_ascent_only(df.ay)
+az = trim_ascent_only(df.az)
+plt.plot(timestamp_seconds, df.ax)
+plt.plot(timestamp_seconds, df.ay)
+plt.plot(timestamp_seconds, df.az)
 plt.show()
 
 
