@@ -208,11 +208,11 @@ int main(int argc, char ** argv) {
     << "rocketState_data.timestamp" << ",";
 
     output
-    << "had_highg_data" << ","
-    << "highg_data.ax" << ","
-    << "highg_data.ay" << ","
-    << "highg_data.az" << ","
-    << "highg_data.timestamp" << ",";
+    << "has_highG_data" << ","
+    << "highG_data.ax" << ","
+    << "highG_data.ay" << ","
+    << "highG_data.az" << ","
+    << "highG_data.timestamp" << ",";
 
     output
     << "has_flap_data" << ","

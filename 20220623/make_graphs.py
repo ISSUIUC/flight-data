@@ -2,12 +2,12 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 
-df = pd.read_csv("data.csv")
+df = pd.read_csv("flight_computer.csv")
 df = df[223500:]
 
 # sort data based on struct
 df_lowG_data = df[df['has_lowG_data'] > 0]
-df_highg_data = df[df['had_highg_data'] > 0]
+df_highG_data = df[df['has_highG_data'] > 0]
 df_barometer_data = df[df['has_barometer_data'] > 0]
 df_state_data = df[df['has_state_data'] > 0]
 
@@ -62,22 +62,22 @@ def plot_lowG_data():
     fig.clear()
     
     
-def plot_highg_data():
+def plot_highG_data():
     
     # intialize plotting variables
-    timestamp = df_highg_data["highg_data.timestamp"].values
+    timestamp = df_highG_data["highG_data.timestamp"].values
     timestamp = (timestamp - min(timestamp))/100000
     fig = plt.figure(dpi=200)
     
     # plot acceleration
-    plt.plot(timestamp, df_highg_data["highg_data.ax"].values, label="highg_data.ax")
-    plt.plot(timestamp, df_highg_data["highg_data.ay"].values, label="highg_data.ay")
-    plt.plot(timestamp, df_highg_data["highg_data.az"].values, label="highg_data.az")
+    plt.plot(timestamp, df_highG_data["highG_data.ax"].values, label="highG_data.ax")
+    plt.plot(timestamp, df_highG_data["highG_data.ay"].values, label="highG_data.ay")
+    plt.plot(timestamp, df_highG_data["highG_data.az"].values, label="highG_data.az")
     
     # format and save plot
     plt.xlabel("Time (s)"); plt.ylabel("Acceleration (G)")
     plt.legend(); plt.grid()
-    plt.savefig("plots/highg_data_acceleration.png")
+    plt.savefig("plots/highG_data_acceleration.png")
     fig.clear()
     
     
@@ -140,5 +140,5 @@ def plot_state_data():
 if __name__ == '__main__':
     plot_lowG_data()
     plot_barometer_data()
-    plot_highg_data()
+    plot_highG_data()
     plot_state_data()

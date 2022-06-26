@@ -50,11 +50,11 @@ void reformat(std::ofstream file, const rapidcsv::Document & doc, size_t step, s
     auto has_fsm_data = doc.GetColumn<size_t>("has_rocketState_data");
     auto has_flap_data = doc.GetColumn<size_t>("has_flap_data");
 
-    auto has_highg_data = doc.GetColumn<size_t>("had_highg_data");
-    auto highg_ax = doc.GetColumn<double>("highg_data.ax");
-    auto highg_ay = doc.GetColumn<double>("highg_data.ay");
-    auto highg_az = doc.GetColumn<double>("highg_data.az");
-    auto highg_timestamp = doc.GetColumn<size_t>("highg_data.timestamp");
+    auto has_highg_data = doc.GetColumn<size_t>("has_highG_data");
+    auto highg_ax = doc.GetColumn<double>("highG_data.ax");
+    auto highg_ay = doc.GetColumn<double>("highG_data.ay");
+    auto highg_az = doc.GetColumn<double>("highG_data.az");
+    auto highg_timestamp = doc.GetColumn<size_t>("highG_data.timestamp");
 
     auto gps_timestamp = doc.GetColumn<size_t>("gps_data.timestamp");
     auto lowG_timestamp = doc.GetColumn<size_t>("lowG_data.timestamp");
