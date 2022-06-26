@@ -181,7 +181,7 @@ int main(int argc, char ** argv) {
     << "lowG_data.mx" << ","
     << "lowG_data.my" << ","
     << "lowG_data.mz" << ","
-    << "lowG_data.timeStamp_lowG" << ",";
+    << "lowG_data.timestamp" << ",";
 
 
 
@@ -193,25 +193,44 @@ int main(int argc, char ** argv) {
     << "gps_data.longitude" << ","
     << "gps_data.posLock" << ","
     << "gps_data.siv_count" << ","
-    << "gps_data.timeStamp_GPS" << ",";
+    << "gps_data.timestamp" << ",";
 
     output
     << "has_barometer_data" << ","
     << "barometer_data.temperature" << ","
     << "barometer_data.altitude" << ","
     << "barometer_data.pressure" << ","
-    << "barometer_data.timeStamp_barometer" << ",";
+    << "barometer_data.timestamp" << ",";
 
     output
     << "has_rocketState_data" << ","
     << "rocketState_data.rocketState" << ","
-    << "rocketState_data.timeStamp_RS" << ",";
+    << "rocketState_data.timestamp" << ",";
+
+    output
+    << "had_highg_data" << ","
+    << "highg_data.ax" << ","
+    << "highg_data.ay" << ","
+    << "highg_data.az" << ","
+    << "highg_data.timestamp" << ",";
 
     output
     << "has_flap_data" << ","
     << "flap_data.l1" << ","
     << "flap_data.l2" << ","
-    << "flap_data.timeStamp_flaps" << '\n';
+    << "flap_data.timestamp" << ",";
+
+    output
+    << "has_state_data" << ","
+    << "state_data.x" << ","
+    << "state_data.vx" << ","
+    << "state_data.ax" << ","
+    << "state_data.timestamp" << ",";
+
+    output
+    << "has_voltage_data" << ","
+    << "voltage_data.timestamp" << ","
+    << "voltage_data.battery_voltage" << "\n";
 
     while(true){
         sensorDataStruct_t data;
@@ -258,14 +277,29 @@ int main(int argc, char ** argv) {
         << data.rocketState_data.timeStamp_RS << ",";
 
         output
+        << data.has_highG_data << ","
+        << data.highG_data.hg_ax << ","
+        << data.highG_data.hg_ay << ","
+        << data.highG_data.hg_az << ","
+        << data.highG_data.timeStamp_highG << ",";
+
+        output
         << data.has_flap_data << ","
         << data.flap_data.l1 << ","
         << data.flap_data.l2 << ","
-        << data.flap_data.timeStamp_flaps;
+        << data.flap_data.timeStamp_flaps << ",";
 
-        output << '\n';
+        output
+        << data.has_state_data << ","
+        << data.state_data.state_x << ","
+        << data.state_data.state_vx << ","
+        << data.state_data.state_ax << ","
+        << data.state_data.state_apo << ","
+        << data.state_data.timeStamp_state << ",";
 
-
+        output
+        << data.has_voltage_data << ","
+        << data.voltage_data.timestamp << ","
+        << data.voltage_data.v_battery << "\n";
     }
-
 }
