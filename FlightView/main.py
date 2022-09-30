@@ -25,13 +25,14 @@ def update_plot(attr,old,new):
     curdoc().roots[0].children[0] = p
 
 
-
+# loads data into dataframe using pandas
 data = pd.read_csv("FlightView/flight_computer_trimmed.csv")
 
 
 timestamp = data["timestamp_ms"]
 state = data["rocket_state"]
 
+# stores start/end of states
 st = 1
 st_memory = []
 choice = 'altitude'
@@ -41,11 +42,13 @@ for i in range(len(timestamp)):
         st_memory.append(i)
         st = state[i]
 
+
 choices = {}
 
 for i in data:
     choices[i] = 1
 
+# creates data dropdown
 data_select = Select(value=choice, title='Series', options=sorted(choices.keys()), height = 50, width = 800)
 
 p = figure(height=300, width=800, tools="xpan", toolbar_location=None, x_axis_location="below", 
@@ -58,6 +61,7 @@ p.yaxis.axis_label = 'Altitude'
 
 data_select.on_change('value', update_plot)
 
+# state boundaries
 state_1_box = BoxAnnotation(left=0, right=st_memory[0], fill_color='#fa7e11', fill_alpha=0.1)
 state_2_box = BoxAnnotation(left=st_memory[0], right=st_memory[1], fill_color='#0047ab', fill_alpha=0.1)
 state_3_box = BoxAnnotation(left=st_memory[1], fill_color='#700038', fill_alpha=0.1)
@@ -66,12 +70,12 @@ p.add_layout(state_1_box)
 p.add_layout(state_2_box)
 p.add_layout(state_3_box)
 
+
+# button to toggle state boundaries
 toggle1 = Toggle(label="State Boxes", button_type="success", active=True)
 toggle1.js_link('active', state_1_box, 'visible')
 toggle1.js_link('active', state_2_box, 'visible')
 toggle1.js_link('active', state_3_box, 'visible')
-
-show(layout(data_select,p, [toggle1]))
 
 controls = column(data_select)
 
