@@ -8,8 +8,6 @@ from bokeh.models import RangeTool, BoxAnnotation, Toggle, Select, ColumnDataSou
 from bokeh.plotting import figure, show, output_file
 from bokeh.models.widgets import Div
 
-
-
 logo = Div(text="<img src='https://drive.google.com/uc?id=1rlfAW6tNZNo0lvKCJSioGHeYONmyNKGU'>", width = 100, height = 75, align = 'start')
 flame = Div(text="<img src='https://drive.google.com/uc?id=1b_c2ZBvTqpKswnBGrxzjdmo0wWuRw7Lf'>",width = 200, height = 75, align = 'start')
 
