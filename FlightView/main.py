@@ -24,6 +24,9 @@ def update_plot(attr,old,new):
     p.add_layout(state_1_box)
     p.add_layout(state_2_box)
     p.add_layout(state_3_box)
+    p.add_layout(state_4_box)
+    p.add_layout(state_5_box)
+    p.add_layout(state_6_box)
 
     curdoc().roots[0].children[2] = p
 
@@ -45,6 +48,7 @@ for i in range(len(timestamp)):
         st_memory.append(i)
         st = state[i]
 
+print(st_memory)
 
 choices = {}
 
@@ -65,20 +69,28 @@ p.yaxis.axis_label = 'Altitude'
 data_select.on_change('value', update_plot)
 
 # state boundaries
-state_1_box = BoxAnnotation(left=0, right=st_memory[0], fill_color='#fa7e11', fill_alpha=0.1)
-state_2_box = BoxAnnotation(left=st_memory[0], right=st_memory[1], fill_color='#0047ab', fill_alpha=0.1)
-state_3_box = BoxAnnotation(left=st_memory[1], fill_color='#700038', fill_alpha=0.1)
+state_1_box = BoxAnnotation(left=0, right=st_memory[0], fill_color='#4B0082', fill_alpha=0.1)
+state_2_box = BoxAnnotation(left=st_memory[0], right=st_memory[1], fill_color='#0000FF', fill_alpha=0.1)
+state_3_box = BoxAnnotation(left=st_memory[1], right=st_memory[2], fill_color='#00FF00', fill_alpha=0.1)
+state_4_box = BoxAnnotation(left=st_memory[2], right=st_memory[3], fill_color='#FFFF00', fill_alpha=0.1)
+state_5_box = BoxAnnotation(left=st_memory[3], right=st_memory[4], fill_color='#FF7F00', fill_alpha=0.1)
+state_6_box = BoxAnnotation(left=st_memory[4], fill_color='#FF0000', fill_alpha=0.1)
 
 p.add_layout(state_1_box)
 p.add_layout(state_2_box)
 p.add_layout(state_3_box)
-
+p.add_layout(state_4_box)
+p.add_layout(state_5_box)
+p.add_layout(state_6_box)
 
 # button to toggle state boundaries
 toggle1 = Toggle(label="State Boxes", button_type="success", active=True)
 toggle1.js_link('active', state_1_box, 'visible')
 toggle1.js_link('active', state_2_box, 'visible')
 toggle1.js_link('active', state_3_box, 'visible')
+toggle1.js_link('active', state_4_box, 'visible')
+toggle1.js_link('active', state_5_box, 'visible')
+toggle1.js_link('active', state_6_box, 'visible')
 
 controls = column(data_select)
 
