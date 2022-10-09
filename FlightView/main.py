@@ -2,14 +2,19 @@ import numpy as np
 import pandas as pd
 
 from bokeh.layouts import layout
-from bokeh.io import curdoc
+from bokeh.io import curdoc,output_notebook, show
 from bokeh.layouts import column, row
-from bokeh.models import RangeTool, BoxAnnotation, Toggle, Select
-from bokeh.plotting import figure, show
+from bokeh.models import RangeTool, BoxAnnotation, Toggle, Select, ColumnDataSource, Range1d
+from bokeh.plotting import figure, show, output_file
+from bokeh.models.widgets import Div
+
+
+
+logo = Div(text="<img src='https://drive.google.com/uc?id=1rlfAW6tNZNo0lvKCJSioGHeYONmyNKGU'>", width = 100, height = 75, align = 'start')
+flame = Div(text="<img src='https://drive.google.com/uc?id=1b_c2ZBvTqpKswnBGrxzjdmo0wWuRw7Lf'>",width = 200, height = 75, align = 'start')
 
 # updates plot when dropdown item is selected
 def update_plot(attr,old,new):
-    print(data_select.value)
     choice = data_select.value
     p = figure(height=300, width=800, tools="xpan", toolbar_location=None, x_axis_location="below", 
     background_fill_color="#efefef", x_range=(0, len(timestamp)-1), y_range = (0,int(1.5 * max(data[choice]))))
@@ -22,14 +27,14 @@ def update_plot(attr,old,new):
     p.add_layout(state_2_box)
     p.add_layout(state_3_box)
 
-    curdoc().roots[0].children[0] = p
+    curdoc().roots[0].children[2] = p
 
 
 # loads data into dataframe using pandas
-data = pd.read_csv("FlightView/flight_computer_trimmed.csv")
+data = pd.read_csv("FlightView/data.csv")
 
 
-timestamp = data["timestamp_ms"]
+timestamp = data["timestamp"]
 state = data["rocket_state"]
 
 # stores start/end of states
@@ -49,7 +54,7 @@ for i in data:
     choices[i] = 1
 
 # creates data dropdown
-data_select = Select(value=choice, title='Series', options=sorted(choices.keys()), height = 50, width = 800)
+data_select = Select(value=choice, title='Series', options=sorted(choices.keys()), height = 50, width = 300)
 
 p = figure(height=300, width=800, tools="xpan", toolbar_location=None, x_axis_location="below", 
 background_fill_color="#efefef", x_range=(0, len(timestamp)-1), y_range = (0,int(1.5 * max(data[choice]))))
@@ -79,5 +84,5 @@ toggle1.js_link('active', state_3_box, 'visible')
 
 controls = column(data_select)
 
-curdoc().add_root(row(p, controls))
+curdoc().add_root(column(row(logo,flame),controls,p))
 curdoc().title = "FlightView"
