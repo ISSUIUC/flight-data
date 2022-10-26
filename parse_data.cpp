@@ -10,6 +10,38 @@ using systime_t = uint32_t;
  */
 
 
+class RocketFSM {
+public:
+    /**
+     * @brief Labels for each FSM state
+     */
+    enum class FSM_State {
+        STATE_INIT,
+        STATE_IDLE,
+        STATE_LAUNCH_DETECT,
+        STATE_BOOST,
+        STATE_BURNOUT_DETECT,
+        STATE_COAST_PREGNC,
+        STATE_COAST_GNC,
+        STATE_APOGEE_DETECT,
+        STATE_APOGEE,
+        STATE_DROGUE_DETECT,
+        STATE_DROGUE,
+        STATE_MAIN_DETECT,
+        STATE_MAIN,
+        STATE_LANDED_DETECT,
+        STATE_LANDED,
+        STATE_ABORT
+    };
+
+    virtual void tickFSM() = 0;
+
+    FSM_State getFSMState() const { return rocket_state_; }
+
+protected:
+    FSM_State rocket_state_ = FSM_State::STATE_INIT;
+};
+
 struct VoltageData {
     float v_battery;
     float v_servo1;
@@ -18,25 +50,6 @@ struct VoltageData {
     float v_5;
     float v_9;
     systime_t timestamp;
-};
-
-
-enum FSM_State {
-    STATE_INIT,
-    STATE_IDLE,
-    STATE_LAUNCH_DETECT,
-    STATE_BOOST,
-    STATE_BURNOUT_DETECT,
-    STATE_COAST,
-    STATE_APOGEE_DETECT,
-    STATE_APOGEE,
-    STATE_DROGUE_DETECT,
-    STATE_DROGUE,
-    STATE_MAIN_DETECT,
-    STATE_MAIN,
-    STATE_LANDED_DETECT,
-    STATE_LANDED,
-    STATE_ABORT
 };
 
 /**
@@ -80,9 +93,9 @@ struct GpsData {
     bool posLock;
     systime_t timeStamp_GPS;
 };
-struct flapData {
-    float l1;
-    float l2;
+
+struct FlapData {
+    float extension;
     systime_t timeStamp_flaps;
 };
 
@@ -114,9 +127,16 @@ struct stateData {
  * @brief Structure for all values related to rocket state
  *
  */
+template <size_t count>
 struct rocketStateData {
-    FSM_State rocketState = STATE_INIT;
+    RocketFSM::FSM_State rocketStates[count];
     systime_t timeStamp_RS = 0;
+
+    rocketStateData() : rocketStates() {
+        for (size_t i = 0; i < count; i++) {
+            rocketStates[i] = RocketFSM::FSM_State::STATE_INIT;
+        }
+    }
 };
 
 /**
@@ -147,11 +167,11 @@ struct sensorDataStruct_t {
 
     // Rocket State
     bool has_rocketState_data;
-    rocketStateData rocketState_data;
+    rocketStateData<1> rocketState_data;
 
     // Flap state
     bool has_flap_data;
-    flapData flap_data;
+    FlapData flap_data;
 
     // Voltage state
     bool has_voltage_data;
@@ -274,7 +294,7 @@ int main(int argc, char ** argv) {
 
         output
         << data.has_rocketState_data << ","
-        << data.rocketState_data.rocketState << ","
+        << static_cast<int>(data.rocketState_data.rocketStates[0]) << ","
         << data.rocketState_data.timeStamp_RS << ",";
 
         output
@@ -286,8 +306,7 @@ int main(int argc, char ** argv) {
 
         output
         << data.has_flap_data << ","
-        << data.flap_data.l1 << ","
-        << data.flap_data.l2 << ","
+        << data.flap_data.extension << ","
         << data.flap_data.timeStamp_flaps << ",";
 
         output
