@@ -190,6 +190,13 @@ int main(int argc, char ** argv) {
     << "lowG_data.mz" << ","
     << "lowG_data.timeStamp_lowG" << ",";
 
+    output
+    << "has_highG_data" << ","
+    << "highG_data.ax" << ","
+    << "highG_data.ay" << ","
+    << "highG_data.az" << ","
+    << "highG_data.timeStamp_highG" << ",";
+
 
 
     output
@@ -242,6 +249,13 @@ int main(int argc, char ** argv) {
         << data.lowG_data.my << ","
         << data.lowG_data.mz << ","
         << data.lowG_data.timeStamp_lowG << ","; 
+
+        output
+        << data.has_highG_data << ","
+        << data.highG_data.hg_ax << ","
+        << data.highG_data.hg_ay << ","
+        << data.highG_data.hg_az << ","
+        << data.highG_data.timeStamp_highG << ","; 
 
 
 
