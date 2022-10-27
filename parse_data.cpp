@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <cstring>
+#include <string>
 
 
 using systime_t = uint32_t;
@@ -80,9 +81,8 @@ struct GpsData {
     bool posLock;
     systime_t timeStamp_GPS;
 };
-struct flapData {
-    float l1;
-    float l2;
+struct FlapData {
+    float extension;
     systime_t timeStamp_flaps;
 };
 
@@ -114,9 +114,16 @@ struct stateData {
  * @brief Structure for all values related to rocket state
  *
  */
+template <size_t count>
 struct rocketStateData {
-    FSM_State rocketState = STATE_INIT;
+    int rocketStates[count];
     systime_t timeStamp_RS = 0;
+
+    // rocketStateData() : rocketStates() {
+    //     for (size_t i = 0; i < count; i++) {
+    //         rocketStates[i] = RocketFSM::FSM_State::STATE_INIT;
+    //     }
+    // }
 };
 
 /**
@@ -147,11 +154,11 @@ struct sensorDataStruct_t {
 
     // Rocket State
     bool has_rocketState_data;
-    rocketStateData rocketState_data;
+    rocketStateData<4> rocketState_data;
 
     // Flap state
     bool has_flap_data;
-    flapData flap_data;
+    FlapData flap_data;
 
     // Voltage state
     bool has_voltage_data;
@@ -203,14 +210,17 @@ int main(int argc, char ** argv) {
     << "barometer_data.timeStamp_barometer" << ",";
 
     output
-    << "has_rocketState_data" << ","
-    << "rocketState_data.rocketState" << ","
-    << "rocketState_data.timeStamp_RS" << ",";
+    << "has_rocketState_data" << ",";
+    for (int i = 0; i < 4; i++) {
+        output << "rocketState_data.rocketState" << i << ",";
+    }
+    // << "rocketState_data.rocketState" << ","
+   output << "rocketState_data.timeStamp_RS" << ",";
 
     output
     << "has_flap_data" << ","
-    << "flap_data.l1" << ","
-    << "flap_data.l2" << ","
+    << "flap_data.extension" << ","
+    // << "flap_data.l2" << ","
     << "flap_data.timeStamp_flaps" << '\n';
 
     while(true){
@@ -231,7 +241,7 @@ int main(int argc, char ** argv) {
         << data.lowG_data.mx << ","
         << data.lowG_data.my << ","
         << data.lowG_data.mz << ","
-        << data.lowG_data.timeStamp_lowG << ",";
+        << data.lowG_data.timeStamp_lowG << ","; 
 
 
 
@@ -253,14 +263,17 @@ int main(int argc, char ** argv) {
         << data.barometer_data.timeStamp_barometer << ",";
 
         output
-        << data.has_rocketState_data << ","
-        << data.rocketState_data.rocketState << ","
-        << data.rocketState_data.timeStamp_RS << ",";
+        << data.has_rocketState_data << ",";
+        for (int i = 0; i < 4; i++) {
+            output << data.rocketState_data.rocketStates[i] << ",";
+        }
+        
+        output << data.rocketState_data.timeStamp_RS << ",";
 
         output
         << data.has_flap_data << ","
-        << data.flap_data.l1 << ","
-        << data.flap_data.l2 << ","
+        << data.flap_data.extension << ","
+        // << data.flap_data.l2 << ","
         << data.flap_data.timeStamp_flaps;
 
         output << '\n';
