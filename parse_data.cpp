@@ -226,8 +226,19 @@ int main(int argc, char ** argv) {
     output
     << "has_flap_data" << ","
     << "flap_data.extension" << ","
-    // << "flap_data.l2" << ","
-    << "flap_data.timeStamp_flaps" << '\n';
+    << "flap_data.timeStamp_flaps" << ",";
+
+    output
+    << "has_state_data" << ","
+    << "state_data.state_x" << ","
+    << "state_data.state_vx" << ","
+    << "state_data.state_ax" << ","
+    << "state_data.state_apo" << ","
+    << "state_data.timeStamp_state" << ",";
+
+    output 
+    << "has_voltage_data" << ","
+    << "voltage_data.v_battery" << "\n";
 
     while(true){
         sensorDataStruct_t data;
@@ -286,8 +297,19 @@ int main(int argc, char ** argv) {
         output
         << data.has_flap_data << ","
         << data.flap_data.extension << ","
-        // << data.flap_data.l2 << ","
-        << data.flap_data.timeStamp_flaps;
+        << data.flap_data.timeStamp_flaps << ",";
+
+        output
+        << data.has_state_data << ","
+        << data.state_data.state_x << ","
+        << data.state_data.state_vx << ","
+        << data.state_data.state_ax << ","
+        << data.state_data.state_apo << ","
+        << data.state_data.timeStamp_state << ",";
+
+        output 
+        << data.has_voltage_data << ","
+        << data.voltage_data.v_battery;
 
         output << '\n';
     }
