@@ -176,7 +176,6 @@ int main(int argc, char ** argv) {
 
     auto header = "binary logging of sensor_data_t";
     char buff[1024];
-    input.read(buff, strlen(header) + 2);
     output
     << "has_lowG_data" << ","
     << "lowG_data.ax" << ","
@@ -291,8 +290,5 @@ int main(int argc, char ** argv) {
         << data.flap_data.timeStamp_flaps;
 
         output << '\n';
-
-
     }
-
 }
