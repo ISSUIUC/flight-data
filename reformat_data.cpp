@@ -1,5 +1,5 @@
 //
-// Created by 16182 on 10/31/2021.
+// Tool to clean up log file and fit all data to a single time series
 //
 //   _______       _____   _____ 
 //  |__   __|/\   |  __ \ / ____|
