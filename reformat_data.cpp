@@ -1,6 +1,12 @@
 //
 // Created by 16182 on 10/31/2021.
 //
+//   _______       _____   _____ 
+//  |__   __|/\   |  __ \ / ____|
+//     | |  /  \  | |__) | (___  
+//     | | / /\ \ |  _  / \___ \ 
+//     | |/ ____ \| | \ \ ____) |
+//     |_/_/    \_\_|  \_\_____/ 
 
 #include "rapidcsv.h"
 #include <fstream>
@@ -40,9 +46,11 @@ void reformat(std::ofstream file, const rapidcsv::Document & doc, size_t step, s
     auto pressure = doc.GetColumn<double>("barometer_data.pressure");
     auto barometer_altitude = doc.GetColumn<double>("barometer_data.altitude");
 
-    auto rocket_state = doc.GetColumn<size_t>("rocketState_data.rocketState");
-    auto l1_extension = doc.GetColumn<double>("flap_data.l1");
-    auto l2_extension = doc.GetColumn<double>("flap_data.l2");
+    auto FSM_timer = doc.GetColumn<size_t>("rocketState_data.rocketState0");
+    auto FSM_hist_50 = doc.GetColumn<size_t>("rocketState_data.rocketState1");
+    auto FSM_hist_6 = doc.GetColumn<size_t>("rocketState_data.rocketState2");
+    auto FSM_GNC = doc.GetColumn<size_t>("rocketState_data.rocketState3");
+    auto extension = doc.GetColumn<double>("flap_data.extension");
 
     auto has_gps_data = doc.GetColumn<size_t>("has_gps_data");
     auto has_lowG_data = doc.GetColumn<size_t>("has_lowG_data");
@@ -54,24 +62,24 @@ void reformat(std::ofstream file, const rapidcsv::Document & doc, size_t step, s
     auto highg_ax = doc.GetColumn<double>("highG_data.ax");
     auto highg_ay = doc.GetColumn<double>("highG_data.ay");
     auto highg_az = doc.GetColumn<double>("highG_data.az");
-    auto highg_timestamp = doc.GetColumn<size_t>("highG_data.timestamp");
+    auto highg_timestamp = doc.GetColumn<size_t>("highG_data.timeStamp_highG");
 
-    auto gps_timestamp = doc.GetColumn<size_t>("gps_data.timestamp");
-    auto lowG_timestamp = doc.GetColumn<size_t>("lowG_data.timestamp");
-    auto baro_timestamp = doc.GetColumn<size_t>("barometer_data.timestamp");
-    auto fsm_timestamp = doc.GetColumn<size_t>("rocketState_data.timestamp");
-    auto flap_timestamp = doc.GetColumn<size_t>("flap_data.timestamp");
-    auto voltage_timestamp = doc.GetColumn<size_t>("voltage_data.timestamp");
-    auto state_timestamp = doc.GetColumn<size_t>("state_data.timestamp");
+    auto gps_timestamp = doc.GetColumn<size_t>("gps_data.timeStamp_GPS");
+    auto lowG_timestamp = doc.GetColumn<size_t>("lowG_data.timeStamp_lowG");
+    auto baro_timestamp = doc.GetColumn<size_t>("barometer_data.timeStamp_barometer");
+    auto fsm_timestamp = doc.GetColumn<size_t>("rocketState_data.timeStamp_RS");
+    auto flap_timestamp = doc.GetColumn<size_t>("flap_data.timeStamp_flaps");
+    // auto voltage_timestamp = doc.GetColumn<size_t>("voltage_data.timestamp");
+    auto state_timestamp = doc.GetColumn<size_t>("state_data.timeStamp_state");
 
     auto has_state_data = doc.GetColumn<size_t>("has_state_data");
-    auto state_x = doc.GetColumn<double>("state_data.x");
-    auto state_vx = doc.GetColumn<double>("state_data.vx");
-    auto state_ax = doc.GetColumn<double>("state_data.ax");
-    auto state_apo = doc.GetColumn<double>("state_data.apo");
+    auto state_x = doc.GetColumn<double>("state_data.state_x");
+    auto state_vx = doc.GetColumn<double>("state_data.state_vx");
+    auto state_ax = doc.GetColumn<double>("state_data.state_ax");
+    auto state_apo = doc.GetColumn<double>("state_data.state_apo");
 
-    auto has_voltage_data = doc.GetColumn<size_t>("has_voltage_data");
-    auto voltage_battery = doc.GetColumn<double>("voltage_data.battery_voltage");
+    // auto has_voltage_data = doc.GetColumn<size_t>("has_voltage_data");
+    // auto voltage_battery = doc.GetColumn<double>("voltage_data.battery_voltage");
 
     size_t gps_index{}, lowg_index{}, baro_index{}, fsm_index{}, flap_index{}, highg_index{},
     voltage_index{}, state_index{};
@@ -101,16 +109,20 @@ void reformat(std::ofstream file, const rapidcsv::Document & doc, size_t step, s
     file << "highg_ay" << ",";
     file << "highg_az" << ",";
 
-    file << "rocket_state" << ",";
-    file << "l1_extension" << ",";
-    file << "l2_extension" << ",";
+    file << "FSM_timer" << ",";
+    file << "FSM_hist_50" << ",";
+    file << "FSM_hist_6" << ",";
+    file << "FSM_GNC" << ",";
+
+    file << "flap_extension" << ",";
+    // file << "l2_extension" << ",";
 
     file << "state_est_x" << ",";
     file << "state_est_vx" << ",";
     file << "state_est_ax" << ",";
-    file << "state_est_apo" << ",";
+    file << "state_est_apo" << "\n";
 
-    file << "battery_voltage" << "\n";
+    // file << "battery_voltage" << "\n";
 
     for(size_t time = start_time; time < end_time; time += step){
         gps_index = find_next_index(gps_index, time, gps_timestamp, has_gps_data);
@@ -120,7 +132,7 @@ void reformat(std::ofstream file, const rapidcsv::Document & doc, size_t step, s
         highg_index = find_next_index(highg_index, time, highg_timestamp, has_highg_data);
         flap_index = find_next_index(flap_index, time, flap_timestamp, has_flap_data);
         state_index = find_next_index(state_index, time, state_timestamp, has_state_data);
-        voltage_index = find_next_index(voltage_index, time, voltage_timestamp, has_voltage_data);
+        // voltage_index = find_next_index(voltage_index, time, voltage_timestamp, has_voltage_data);
 
         file << time << ",";
         file << ax[lowg_index] << ",";
@@ -147,20 +159,23 @@ void reformat(std::ofstream file, const rapidcsv::Document & doc, size_t step, s
         file << highg_ay[highg_index] << ",";
         file << highg_az[highg_index] << ",";
 
-        file << rocket_state[fsm_index] << ",";
-        file << l1_extension[flap_index] << ",";
-        file << l2_extension[flap_index] << ",";
+        file << FSM_timer[fsm_index] << ",";
+        file << FSM_hist_50[fsm_index] << ",";
+        file << FSM_hist_6[fsm_index] << ",";
+        file << FSM_GNC[fsm_index] << ",";
+
+        file << extension[flap_index] << ",";
 
         file << state_x[state_index] << ",";
         file << state_vx[state_index] << ",";
         file << state_ax[state_index] << ",";
-        file << state_apo[state_index] << ",";
+        file << state_apo[state_index] << "\n";
 
-        file << voltage_battery[voltage_index] << "\n";
+        // file << voltage_battery[voltage_index] << "\n";
     }
 }
 
 int main(){
-    rapidcsv::Document doc("irec.csv");
-    reformat(std::ofstream("trimmed_irec.csv"), doc, 10, 4935750, 4937700);
+    rapidcsv::Document doc("data3.csv");
+    reformat(std::ofstream("flight_computer.csv"), doc, 10, 1945435, 2135322);
 }

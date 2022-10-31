@@ -2,6 +2,13 @@
 Illinois Space Society
 
 Launch Data Formatting Script
+  _______       _____   _____ 
+ |__   __|/\   |  __ \ / ____|
+    | |  /  \  | |__) | (___  
+    | | / /\ \ |  _  / \___ \ 
+    | |/ ____ \| | \ \ ____) |
+    |_/_/    \_\_|  \_\_____/ 
+
 """
 
 import pandas as pd
