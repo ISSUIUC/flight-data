@@ -66,7 +66,7 @@ def plot_lowG_data():
     # format and save plot
     plt.xlabel("Time (ms)"); plt.ylabel("Magnetic Flux Density (Gauss)")
     plt.legend(); plt.grid()
-    plt.title("Magnetometer Data - LSM9DS1")
+    plt.title("Magnetometer Data (Until Apogee) - LSM9DS1")
     plt.savefig("plots/lowG_data_magnetometer.png")
     fig.clear()
     
@@ -95,8 +95,8 @@ def plot_highG_data():
 def plot_barometer_data():
     
     # intialize plotting variables
-    timestamp = df_barometer_data["barometer_data.timestamp"].values
-    timestamp = (timestamp - min(timestamp))/100000
+    # timestamp = df_barometer_data["barometer_data.timestamp"].values
+    # timestamp = (timestamp - min(timestamp))/100000
     fig = plt.figure(dpi=200)
     
     #----------------------------------------------------------------------------------------------#
@@ -106,26 +106,28 @@ def plot_barometer_data():
     ax_temperature = ax_pressure.twinx()
     
     # plot raw barometer data
-    ax_pressure.plot(timestamp, df_barometer_data["barometer_data.pressure"].values, 
+    ax_pressure.plot(tstamp, df["pressure"], 
                      label="pressure", color="tab:blue", zorder=10)
-    ax_temperature.plot(timestamp, df_barometer_data["barometer_data.temperature"].values, 
+    ax_temperature.plot(tstamp, df["temperature"], 
                         label="temperature", color="tab:orange", zorder=10)
     
     # format and save plot
-    ax_pressure.set_xlabel("Time (s)")
+    ax_pressure.set_xlabel("Time (ms)")
     ax_pressure.set_ylabel("Pressure (mbar)"); ax_temperature.set_ylabel("Temperature (deg C)")
     ax_pressure.grid(True)
+    plt.title("Barometer Data - MS5611")
     plt.savefig("plots/barometer_data_raw.png")
     fig_2axes.clear()
     
     #----------------------------------------------------------------------------------------------#
     
     # plot barometric altitude 
-    plt.plot(timestamp, df_barometer_data["barometer_data.altitude"].values)
+    plt.plot(tstamp, df["barometer_altitude"])
     
     # format and save plot
-    plt.xlabel("Time (s)"); plt.ylabel("Barometric Altitude (m)")
+    plt.xlabel("Time (ms)"); plt.ylabel("Altitude (m)")
     plt.grid()
+    plt.title("Barometric Altitude - MS5611")
     plt.savefig("plots/barometer_data_altitude.png")
     fig.clear()
     
@@ -133,23 +135,36 @@ def plot_barometer_data():
 def plot_state_data():
     
     # intialize plotting variables
-    timestamp_state = df_state_data["state_data.timestamp"].values/100000
-    timestamp_barometer = df_barometer_data["barometer_data.timestamp"].values/100000
+    # timestamp_state = df_state_data["state_data.timestamp"].values/100000
+    # timestamp_barometer = df_barometer_data["barometer_data.timestamp"].values/100000
     fig = plt.figure(dpi=200)
     
     # plot altitudes
-    plt.plot(timestamp_state, df_state_data["state_data.x"].values, label="State")
-    plt.plot(timestamp_barometer, df_barometer_data["barometer_data.altitude"].values, label="Barometric")
+    plt.plot(tstamp, df["barometer_altitude"].values, label="Barometric")
+    plt.plot(tstamp, df["state_est_apo"].values, label="State")
+    
     
     # format and save plot
-    plt.xlabel("Time (s)"); plt.ylabel("Altitude (m)")
+    plt.xlabel("Time (ms)"); plt.ylabel("Altitude (m)")
     plt.legend(); plt.grid()
-    plt.savefig("plots/state_comparison.png")
+    plt.title("Barometric Atitude vs Predicted Apogee")
+    plt.savefig("plots/state_comparison_apo.png")
     fig.clear()
+
+    #-----------------------------------------------------------------------------------------------------#
+
+    plt.plot(tstamp[0:3500], df["state_est_vx"][0:3500], label="KF Velocity")
+    plt.xlabel("Time (ms)")
+    plt.ylabel("Velocity (m/s)")
+    plt.legend()
+    plt.grid()
+    plt.title("State Estimation Velocity (Until Apogee)")
+    plt.savefig("plots/state_vx.png")
+
     
     
 if __name__ == '__main__':
-    plot_lowG_data()
+    # plot_lowG_data()
     # plot_barometer_data()
-    plot_highG_data()
-    # plot_state_data()
+    # plot_highG_data()
+    plot_state_data()
