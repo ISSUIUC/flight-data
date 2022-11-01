@@ -15,8 +15,25 @@ Data Plotting Script
 import pandas as pd
 import matplotlib.pyplot as plt
 
+
 df = pd.read_csv("flight_computer.csv")
 tstamp = df["timestamp_ms"] - df["timestamp_ms"][0]
+fsm_names = ["Init",
+            "Idle",
+            "Launch Detect",
+            "Boost",
+            "Burnout Detect",
+            "Coast Pre GNC",
+            "Coast GNC",
+            "Apogee Detect",
+            "Apogee",
+            "Drogue Detect",
+            "Drogue Descent",
+            "Main Detect",
+            "Main Descent",
+            "Landed Detect",
+            "Landed"]
+
 
 plt.rcParams["font.family"] = "monospace"
 plt.style.use("dark_background")
@@ -167,4 +184,5 @@ if __name__ == '__main__':
     # plot_lowG_data()
     # plot_barometer_data()
     # plot_highG_data()
-    plot_state_data()
+    # plot_state_data()
+    print(tstamp)
