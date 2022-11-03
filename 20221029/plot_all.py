@@ -241,11 +241,62 @@ def plot_mach_data():
     plt.savefig("plots/pressure_and_mach.png")
     fig_2axes.clear()
 
+def plot_fsm_with_altitude_data():
+    fig_2axes, fsmState = plt.subplots(dpi=200)
+    altitude = fsmState.twinx()
+    # plot fsm states 
+
+    #indexes for apogee
+    #startIndex, endIndex = 2750, 3500
+
+    #indexes for whole flight
+    #startIndex, endIndex = 0, -1
+
+    #indexes for landed
+    startIndex, endIndex = 4000, -1
+
+    fsmState.plot(tstamp[startIndex:endIndex], df["rocket_state2"][startIndex:endIndex], label = "History Buffer 6")
+    fsmState.plot(tstamp[startIndex:endIndex], df["rocket_state1"][startIndex:endIndex], label = "History Buffer 50")
+    fsmState.plot(tstamp[startIndex:endIndex], df["rocket_state3"][startIndex:endIndex], label = "Kalman")
+    altitude.plot(tstamp[startIndex:endIndex], df["barometer_altitude"][startIndex:endIndex], label = "Altitude", color="tab:orange")
+    
+    # format and save plot
+    fsmState.set_xlabel("Time (ms)"); 
+    fsmState.set_ylabel("FSM State")
+    altitude.set_ylabel("Altitude (m)")
+    fsmState.legend()
+    altitude.legend()
+    plt.title("FSM States Near Landing")
+    plt.savefig("plots/fsm_states_and_altitude_near_landing.png")
+    fig_2axes.clear()
+
+def plot_fsm_with_acceleration_data():
+    fig_2axes, fsmState = plt.subplots(dpi=200)
+    altitude = fsmState.twinx()
+    # plot fsm states 
+    startIndex, endIndex = 3050, 3300
+    fsmState.plot(tstamp[startIndex:endIndex], df["rocket_state2"][startIndex:endIndex], label = "History Buffer 6")
+    fsmState.plot(tstamp[startIndex:endIndex], df["rocket_state1"][startIndex:endIndex], label = "History Buffer 50")
+    fsmState.plot(tstamp[startIndex:endIndex], df["rocket_state3"][startIndex:endIndex], label = "Kalman")
+    altitude.plot(tstamp[startIndex:endIndex], df["highg_az"][startIndex:endIndex], label = "Acceleration", color="tab:orange")
+    
+    # format and save plot
+    fsmState.set_xlabel("Time (ms)"); 
+    fsmState.set_ylabel("FSM State")
+    altitude.set_ylabel("Acceleration (gs)")
+    fsmState.legend()
+    altitude.legend()
+    plt.title("FSM States Near Separation")
+    plt.savefig("plots/fsm_states_and_acceleration.png")
+    fig_2axes.clear()
+
 
 if __name__ == '__main__':
     # plot_lowG_data()
     # plot_barometer_data()
     # plot_highG_data()
     # plot_state_data()
-    plot_mach_data()
+    #plot_mach_data()
+    plot_fsm_with_altitude_data()
+    #plot_fsm_with_acceleration_data()
     #print(tstamp)
