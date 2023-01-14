@@ -1,3 +1,16 @@
+"""
+A tool which can extract data written by TARS to its SD card into a much more usable JSON file.
+
+Steps to use this wonderful software:
+
+  1. Install Python 3.9+. Notably, as of 1/14/2023, Python 3.9 cannot be installed, so you'll have to go up to 3.10.
+  2. Install the library lark (also called lark-parser). Make sure you are installing for the right Python.
+  3. Run using `python data_parser.py <path-to-header> <path-to-raw>`
+    - There are numerous reasons this might not work out of the box. Some reasons I can think of right now include
+      not having python on your path, having the wrong python on your path, not being in the right working directory,
+      or not having installed the right lark.
+"""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -9,6 +22,7 @@ from argparse import ArgumentParser
 import struct
 import pathlib
 
+# ebnf grammars are cool!
 grammar = r"""
 start: top_level*
 
@@ -127,7 +141,13 @@ class Type(ABC):
         return parts
 
     @abstractmethod
-    def parse(self, data: bytes): ...
+    def parse(self, data: bytes):
+        """
+        Given some data, parse it as if it represents this type and return the result as JSON
+
+        :param data: The data given. Must be exactly the same length as this type's `size`
+        """
+        ...
 
     def __repr__(self):
         return f"{self.__class__.__name__}(size={self.size}, align={self.align})"
@@ -136,12 +156,14 @@ class Type(ABC):
 class Struct(Type):
     def __init__(self, members: dict[str, Type]):
         self.members = members
-        size, align = self._calc(list(self.members.values()))
+        size, align = self._calc(list(self.members.values()))  # structs are represented as their fields' types in order
+        # conveniently, python's dicts are order-preserving, which is needed for the above line to do the right thing
         super().__init__(size, align)
 
     def parse(self, data: bytes):
         parsed = {}
-        parts = self._get_parts(data, list(self.members.values()))
+        parts = self._get_parts(data, list(self.members.values()))  # slice the given data into parts corresponding to
+                                                                    #  each field, then let each field parse its data
         for (name, typ), part in zip(self.members.items(), parts):
             parsed[name] = typ.parse(part)
         return parsed
@@ -151,7 +173,7 @@ class Array(Type):
     def __init__(self, item: Type, count: int):
         self.item = item
         self.count = count
-        size, align = self._calc([item]*count)
+        size, align = self._calc([item]*count)  # arrays are just their singular item repeated some amount
         super().__init__(size, align)
 
     def parse(self, data: bytes):
@@ -162,24 +184,32 @@ class Array(Type):
 class Enum(Type):
     def __init__(self, variants: dict[int, str]):
         self.variants = variants
+        # unless otherwise specified, pretty much every compiler makes enums backed by a uint32_t by default
+        # so we use the characteristics of a uint32_t
         super().__init__(4, 4)
 
     def parse(self, data: bytes):
         as_int = struct.unpack("i", data)[0]
+        # having accessed the integer value, we map it to its name, which is stored in the `variants` field
         return self.variants[as_int]
 
 
 class Boolean(Type):
     def __init__(self):
+        # booleans are represented by a single byte, even though they only need a single bit technically
+        # this is because our computers have limitations
         super().__init__(1, 1)
 
     def parse(self, data: bytes):
+        # turns out that `?` is the code for a boolean, so this works
         return struct.unpack("?", data)[0]
 
 
 class Integer(Type):
     def __init__(self, size: int, signed: bool = True, align: int = None):
+        # The only case where align is different is with some nonsense involving XMM registers, but oh well
         super().__init__(size, size if align is None else align)
+        # only a limited set of sizes is supported, as seen by the below table
         if size == 1 and signed:
             self._format = "b"
         elif size == 1 and not signed:
@@ -202,6 +232,8 @@ class Integer(Type):
 class Float(Type):
     def __init__(self, size: int, align: int = None):
         super().__init__(size, size if align is None else align)
+        # only floats and doubles are supported because python only supports floats and doubles
+        # and the code to extract them would be a colossal pain to write
         if size == 4:
             self._format = "f"
         elif size == 8:
@@ -286,19 +318,35 @@ class Calculate(Interpreter):
     that were defined in the AST nodes.
     """
     def __init__(self, ctxt: Context):
+        """
+        :param ctxt: The context to evaluate the provided AST nodes in. This will be mutated.
+        """
         self.ctxt = ctxt
         self.names = ctxt.names
         self.types = ctxt.types
         self.templates = ctxt.templates
 
+    # The way Lark works is that (for classes inheriting from Interpreter), the `visit` method defined on Interpreter
+    # takes a lark.Tree or a lark.Token and calls the method with the same name as the rule that created said
+    # Tree or Token (that field which defines the rule which created it is called `data` on Trees and 'type' on Tokens).
+
     def start(self, top_levels: lark.Tree):
+        # the `start` node contains all the structs and enums in the file, so we only need to visit each child node
+        # which lark provides a helper for
         self.visit_children(top_levels)
 
     @v_args(inline=True)
     def enum(self, name: lark.Token, *variants: lark.Tree):
-        enum = {}
+        # the @v_args(inline=True) means that the children of the `enum` node will be provided as arguments, instead of
+        # the `enum` node itself being provided as the argument as would happen normally
+
+        enum: dict[int, str] = {}   # stores the variants of the enum as a mapping from value to the name of the variant
         for i, variant in enumerate(variants):
+            # calls the `enum_variant` method, which returns the name of the variant as a str
             enum[i] = self.visit(variant)
+
+        # having collected a map from the number which represents each variant to the variant's name, make it into an
+        # Enum type and put it in this context's type map
         self.types[str(name)] = Enum(enum)
 
     @v_args(inline=True)
@@ -307,6 +355,8 @@ class Calculate(Interpreter):
 
     @v_args(inline=True)
     def struct(self, name: lark.Token, items: lark.Tree):
+        # `struct` takes a name and a container of `struct_items`. It then finds the type of each field and stores the
+        # resulting `Struct`
         fields: dict[str, Type] = {}
         for item in items.children:
             if item.data == "field":
@@ -320,15 +370,18 @@ class Calculate(Interpreter):
 
     @v_args(inline=True)
     def template_param_const(self, typ: lark.Tree, name: lark.Token) -> tuple[str, str]:
+        # for now, we just assume `typ` is some integral type, because it would be too difficult otherwise
         return "const", str(name)
 
     @v_args(inline=True)
     def templated_struct(self, template: lark.Tree, name: lark.Token, items: lark.Tree):
+        # Handles a struct with template parameters. We use the two functions above in order to parse the templates
+        # into their info tuples.
         template_params = []
-        for template_param in template.children:
+        for template_param in template.children:    # we expect `template` to be of type `template`
             template_params.append(self.visit(template_param))
 
-        fields: list[lark.Tree] = []
+        fields: list[lark.Tree] = []    # we just store the nodes
         for item in items.children:
             if item.data == "field":
                 fields.append(item)
@@ -336,34 +389,43 @@ class Calculate(Interpreter):
 
     @v_args(inline=True)
     def field(self, decl: lark.Tree, init: lark.Tree = None) -> tuple[str, Type]:
+        # simply return the name of the field, and the type, by delegating to the `decl` method
+        # this is necessary because C style declaration syntax is a sin (arrays are separated from the rest of the type)
         return self.visit(decl)
 
     @v_args(inline=True)
     def decl(self, typ: lark.Tree, name: lark.Token, *arrays: lark.Tree) -> tuple[str, Type]:
-        base: Type = self.visit(typ)
-        for array in arrays:
-            count: int = self.visit(array)
+        base: Type = self.visit(typ)   # the left hand side of the type (the type without any array info)
+        for array in arrays:           # for each array part (the [<const_expr>] part), wrap in another Array
+            count: int = self.visit(array)  # visiting resolves the const_expr into an actual number we can use
             base = Array(base, count)
         return str(name), base
 
     def as_type(self, tree: lark.Tree) -> Type:
+        # interprets the given tree as if it were a type, even it is a const_expr of type `ident` (which is identical
+        # to a type of type `type_name` except for the assumption as it was parsed)
         if tree.data in ("ident", "type_name"):
             return self.type_name(tree)
         else:
             return self.type_generic(tree)
 
     def as_const_expr(self, tree: lark.Tree) -> int:
+        # interprets the given tree as if it were a const_expr, which functions similarly as the above
         if tree.data in ("ident", "type_name"):
             return self.ident(tree)
         else:
+            # we do the splat because apparently the v_args thing has to be done ourselves? I don't know honestly.
             return self.integer(*tree.children)
 
     @v_args(inline=True)
     def ident(self, name: lark.Token) -> int:
+        # straightforward, if we see a bare name as a const_expr, fetch the value of it
+        # useful where an array count is a template parameter
         return self.names[str(name)]
 
     @v_args(inline=True)
     def integer(self, num: lark.Token) -> int:
+        # there are many types of integers
         if num.type == "DECIMAL":
             return int(num.value)
         elif num.type == "HEX":
@@ -377,10 +439,12 @@ class Calculate(Interpreter):
 
     @v_args(inline=True)
     def type_name(self, name: lark.Token) -> Type:
+        # if we see a name used as a type, fetch the appropriate type
         return self.types[str(name)]
 
     @v_args(inline=True)
     def type_generic(self, name: lark.Token, args: lark.Tree) -> Type:
+        # if we see a type used with template parameters introduced, we have to resolve it using Template.resolve
         thing = self.templates[str(name)].resolve(args.children, self)
         return thing
 
