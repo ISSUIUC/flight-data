@@ -14,6 +14,7 @@ Steps to use this wonderful software:
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from typing import Callable
 
 import lark
 from lark import Lark
@@ -26,13 +27,16 @@ import pathlib
 grammar = r"""
 start: top_level*
 
-?top_level: struct | templated_struct | enum
+?top_level: struct | templated_struct | templated_substituted_struct | enum | function
+
+function: type IDENTIFIER parenthesized block
 
 template: "template" "<" _template_param_list ">"
 _template_param_list: ((template_param ",")* template_param)?
 ?template_param: "typename" IDENTIFIER -> template_param_type
             | type IDENTIFIER -> template_param_const
 templated_struct: template "struct" IDENTIFIER struct_items ";"
+templated_substituted_struct: template "struct" IDENTIFIER "<" template_args ">" struct_items ";"
 struct: "struct" IDENTIFIER struct_items ";"
 
 struct_items: "{" struct_item* "}"
@@ -45,8 +49,16 @@ decl: type IDENTIFIER ("[" const_expr "]")*
 initializer_list: (":" (initializer ",")* initializer)?
 initializer: IDENTIFIER parenthesized
 
-?const_expr: number
-           | IDENTIFIER -> ident
+?const_expr_0: number
+             | IDENTIFIER -> ident
+             | "(" const_expr ")" 
+             | "sizeof" "(" type ")" -> sizeof
+             
+?const_expr_1: const_expr_1 "+" const_expr_0 -> addition
+             | const_expr_1 "-" const_expr_0 -> subtraction
+             | const_expr_0
+
+?const_expr: const_expr_1
 
 enum: "enum" "class"? IDENTIFIER "{" _enum_variants "}" ";"
 _enum_variants: (enum_variant ("," enum_variant)*)?
@@ -168,6 +180,9 @@ class Struct(Type):
             parsed[name] = typ.parse(part)
         return parsed
 
+    def __eq__(self, other):
+        return self is other
+
 
 class Array(Type):
     def __init__(self, item: Type, count: int):
@@ -179,6 +194,9 @@ class Array(Type):
     def parse(self, data: bytes):
         parsed = [self.item.parse(item) for item in self._get_parts(data, [self.item]*self.count)]
         return parsed
+
+    def __eq__(self, other):
+        return isinstance(other, Array) and self.item == other.item and self.count == other.count
 
 
 class Enum(Type):
@@ -193,6 +211,9 @@ class Enum(Type):
         # having accessed the integer value, we map it to its name, which is stored in the `variants` field
         return self.variants[as_int]
 
+    def __eq__(self, other):
+        return self is other
+
 
 class Boolean(Type):
     def __init__(self):
@@ -203,6 +224,9 @@ class Boolean(Type):
     def parse(self, data: bytes):
         # turns out that `?` is the code for a boolean, so this works
         return struct.unpack("?", data)[0]
+
+    def __eq__(self, other):
+        return isinstance(other, Boolean)
 
 
 class Integer(Type):
@@ -228,6 +252,9 @@ class Integer(Type):
     def parse(self, data: bytes):
         return struct.unpack(self._format, data)[0]
 
+    def __eq__(self, other):
+        return isinstance(other, Integer) and self._format == other._format
+
 
 class Float(Type):
     def __init__(self, size: int, align: int = None):
@@ -244,13 +271,26 @@ class Float(Type):
     def parse(self, data: bytes):
         return struct.unpack(self._format, data)[0]
 
+    def __eq__(self, other):
+        return isinstance(other, Float) and self._format == other._format
+
+
+class TemplateParam:
+    def __init__(self, name: str, is_type: bool, default: Type | int | None):
+        self.name = name
+        self.is_type = is_type
+        self.default = default
+
+    def __repr__(self):
+        return f"TemplateParam({self.name=}, {self.is_type=}, {self.default=})"
+
 
 class Template:
     """
     Generated whenever a templated struct is encountered. It stores what template parameters it requires (what type and
     what name they have), as well as the Context it was in and the fields of the struct (as AST).
     """
-    def __init__(self, params: list[tuple[str, str]], fields: list[lark.Tree], ctxt: Context):
+    def __init__(self, params: dict[str, TemplateParam], fields: list[lark.Tree], ctxt: Context):
         """
         :param params: A list of parameter info tuples. The first item of the tuple should be either the string
         "typename" if it expects a type, or anything else otherwise. The second item of the tuple should be the name the
@@ -264,35 +304,43 @@ class Template:
         self.fields = fields
         self.ctxt = ctxt
 
-    def resolve(self, args: list[lark.Tree], calc: Calculate) -> Struct:
-        """
-        Resolve the template, given a substitution specified by the given args.
+        self.variants: list[Template] = []
 
-        A wrinkle is that template syntax is somewhat ambiguous, so we can't tell if something is supposed to be a type
-        or a constexpr until we know what the template is. So we just pass in the full AST nodes for the arguments
-        and resolve them specially once we figure out whether each argument should be a constexpr or a type. This is why
-        we pass in the Calculator instance, so we can do that "resolve them specially" part.
+    def resolve(self, args: list[lark.Tree], calc: Calculate) -> Callable[[], Struct] | None:
+        for variant in reversed(self.variants):
+            if (res := variant.resolve(args, calc)) is not None:
+                return res
 
-        :param args: The arguments of the template expansion. Should be either "type" or a "const_expr" AST nodes.
-        :param calc: The Calculator instance in which the template expansion was needed.
-        :return: A Struct representing the result of the template expansion.
-        """
         if len(args) != len(self.params):
-            raise Exception()
+            return None
         resolve_ctxt = self.ctxt.clone()
-        for arg, (param_type, param_name) in zip(args, self.params):
-            if param_type == "typename":
-                typ = calc.as_type(arg)
-                resolve_ctxt.types[param_name] = typ
+        for arg, param in zip(args, self.params.values()):
+            if param.is_type:
+                if calc.can_be_type(arg):
+                    typ = calc.as_type(arg)
+                    if param.default is not None and param.default != typ:
+                        return None
+                    resolve_ctxt.types[param.name] = typ
+                else:
+                    return None
             else:
-                val = calc.as_const_expr(arg)
-                resolve_ctxt.names[param_name] = val
-        calc = Calculate(resolve_ctxt)
-        fields: dict[str, Type] = {}
-        for item in self.fields:
-            f_name, field = calc.visit(item)
-            fields[f_name] = field
-        return Struct(fields)
+                if calc.can_be_const_expr(arg):
+                    val = calc.as_const_expr(arg)
+                    if param.default is not None and param.default != val:
+                        return None
+                    resolve_ctxt.names[param.name] = val
+                else:
+                    return None
+
+        def render() -> Struct:
+            new_calc = Calculate(resolve_ctxt)
+            fields: dict[str, Type] = {}
+            for item in self.fields:
+                f_name, field = new_calc.visit(item)
+                fields[f_name] = field
+            return Struct(fields)
+
+        return render
 
 
 class Context:
@@ -335,6 +383,9 @@ class Calculate(Interpreter):
         # which lark provides a helper for
         self.visit_children(top_levels)
 
+    def function(self, tree):
+        pass
+
     @v_args(inline=True)
     def enum(self, name: lark.Token, *variants: lark.Tree):
         # the @v_args(inline=True) means that the children of the `enum` node will be provided as arguments, instead of
@@ -365,27 +416,65 @@ class Calculate(Interpreter):
         self.types[str(name)] = Struct(fields)
 
     @v_args(inline=True)
-    def template_param_type(self, name: lark.Token) -> tuple[str, str]:
-        return "typename", str(name)
+    def template_param_type(self, name: lark.Token) -> TemplateParam:
+        return TemplateParam(str(name), True, None)
 
     @v_args(inline=True)
-    def template_param_const(self, typ: lark.Tree, name: lark.Token) -> tuple[str, str]:
-        # for now, we just assume `typ` is some integral type, because it would be too difficult otherwise
-        return "const", str(name)
+    def template_param_const(self, typ: lark.Tree, name: lark.Token) -> TemplateParam:
+        return TemplateParam(str(name), False, None)
 
     @v_args(inline=True)
     def templated_struct(self, template: lark.Tree, name: lark.Token, items: lark.Tree):
-        # Handles a struct with template parameters. We use the two functions above in order to parse the templates
-        # into their info tuples.
-        template_params = []
-        for template_param in template.children:    # we expect `template` to be of type `template`
-            template_params.append(self.visit(template_param))
+        template_params: dict[str, TemplateParam] = {}
+        for template_param in template.children:
+            param: TemplateParam = self.visit(template_param)
+            template_params[param.name] = param
 
-        fields: list[lark.Tree] = []    # we just store the nodes
+        fields: list[lark.Tree] = []
         for item in items.children:
             if item.data == "field":
                 fields.append(item)
-        self.templates[str(name)] = Template(template_params, fields, self.ctxt.clone())
+        self.templates[str(name)] = Template(template_params, fields, self.ctxt)
+
+    @v_args(inline=True)
+    def templated_substituted_struct(self, template: lark.Tree, name: lark.Token, substitution: lark.Tree, items: lark.Tree):
+        variant_of = self.templates[str(name)]
+        if len(variant_of.params) != len(substitution.children):
+            raise Exception()
+
+        template_params: dict[str, TemplateParam] = {}
+        for template_param in template.children:
+            param: TemplateParam = self.visit(template_param)
+            template_params[param.name] = param
+
+        actual_template_params: dict[str, TemplateParam] = {}
+        for actual_param, item in zip(variant_of.params.values(), substitution.children):
+            if item.data in ("type_name", "ident"):
+                name = str(item.children[0])
+                if name in template_params.keys():
+                    actual_template_params[actual_param.name] = template_params[name]
+                    continue
+
+            if actual_param.is_type:
+                if self.can_be_type(item):
+                    typ = self.as_type(item)
+                    actual_template_param = TemplateParam(actual_param.name, True, typ)
+                else:
+                    raise Exception()
+            else:
+                if self.can_be_const_expr(item):
+                    val = self.as_const_expr(item)
+                    actual_template_param = TemplateParam(actual_param.name, False, val)
+                else:
+                    raise Exception()
+            actual_template_params[actual_param.name] = actual_template_param
+
+        fields: list[lark.Tree] = []
+        for item in items.children:
+            if item.data == "field":
+                fields.append(item)
+        template = Template(actual_template_params, fields, self.ctxt)
+        variant_of.variants.append(template)
 
     @v_args(inline=True)
     def field(self, decl: lark.Tree, init: lark.Tree = None) -> tuple[str, Type]:
@@ -401,21 +490,28 @@ class Calculate(Interpreter):
             base = Array(base, count)
         return str(name), base
 
+    @staticmethod
+    def can_be_type(tree: lark.Tree) -> bool:
+        return tree.data in ("ident", "type_name", "type_generic")
+
+    @staticmethod
+    def can_be_const_expr(tree: lark.Tree) -> bool:
+        return tree.data in ("ident", "type_name", "number", "sizeof", "addition", "subtraction")
+
     def as_type(self, tree: lark.Tree) -> Type:
-        # interprets the given tree as if it were a type, even it is a const_expr of type `ident` (which is identical
-        # to a type of type `type_name` except for the assumption as it was parsed)
-        if tree.data in ("ident", "type_name"):
-            return self.type_name(tree)
+        if self.can_be_type(tree):
+            return self.visit(tree)
         else:
-            return self.type_generic(tree)
+            raise Exception()
 
     def as_const_expr(self, tree: lark.Tree) -> int:
-        # interprets the given tree as if it were a const_expr, which functions similarly as the above
-        if tree.data in ("ident", "type_name"):
-            return self.ident(tree)
+        if self.can_be_const_expr(tree):
+            if tree.data == "type_name":
+                return self.ident(*tree.children)
+            else:
+                return self.visit(tree)
         else:
-            # we do the splat because apparently the v_args thing has to be done ourselves? I don't know honestly.
-            return self.integer(*tree.children)
+            raise Exception()
 
     @v_args(inline=True)
     def ident(self, name: lark.Token) -> int:
@@ -424,8 +520,7 @@ class Calculate(Interpreter):
         return self.names[str(name)]
 
     @v_args(inline=True)
-    def integer(self, num: lark.Token) -> int:
-        # there are many types of integers
+    def number(self, num: lark.Token) -> int:
         if num.type == "DECIMAL":
             return int(num.value)
         elif num.type == "HEX":
@@ -438,15 +533,30 @@ class Calculate(Interpreter):
             raise Exception()
 
     @v_args(inline=True)
+    def addition(self, left: lark.Tree, right: lark.Tree) -> int:
+        return self.visit(left) + self.visit(right)
+
+    @v_args(inline=True)
+    def subtraction(self, left: lark.Tree, right: lark.Tree) -> int:
+        return self.visit(left) - self.visit(right)
+
+    @v_args(inline=True)
+    def sizeof(self, typ: lark.Tree) -> int:
+        resolved_type: Type = self.visit(typ)
+        return resolved_type.size
+
+    @v_args(inline=True)
     def type_name(self, name: lark.Token) -> Type:
         # if we see a name used as a type, fetch the appropriate type
         return self.types[str(name)]
 
     @v_args(inline=True)
     def type_generic(self, name: lark.Token, args: lark.Tree) -> Type:
-        # if we see a type used with template parameters introduced, we have to resolve it using Template.resolve
-        thing = self.templates[str(name)].resolve(args.children, self)
-        return thing
+        renderer_or_none = self.templates[str(name)].resolve(args.children, self)
+        if renderer_or_none is None:
+            raise Exception()
+        else:
+            return renderer_or_none()
 
 
 # this stuff is global for easier editing, I guess
@@ -454,6 +564,7 @@ class Calculate(Interpreter):
 BASE_NAMES: dict[str, int] = {}
 BASE_TYPES: dict[str, Type] = {
     'bool': Boolean(),
+    'char': Integer(1),
     'float': Float(4),
     'uint32_t': Integer(4, signed=False),
     'systime_t': Integer(4)
