@@ -97,15 +97,6 @@ select = figure(title="Drag the middle and edges of the selection box to change 
                 x_axis_type="datetime", y_axis_type=None,
                 tools="", toolbar_location=None, background_fill_color="#efefef")
 
-range_tool = RangeTool(x_range=g.x_range)
-range_tool.overlay.fill_color = "navy"
-range_tool.overlay.fill_alpha = 0.2
-
-
-select.ygrid.grid_line_color = None
-select.add_tools(range_tool)
-select.toolbar.active_multi = range_tool
-
 
 #define a range plotter that will take a list of keys and a csv and create plots
 def range_plotter(list_of_keys):
@@ -116,6 +107,8 @@ def range_plotter(list_of_keys):
         g.line('timestamp_ms', key, source=source, color=palette[i], y_range_name=(key+'_axis'))
         g.add_layout(LinearAxis(y_range_name=(key+'_axis'), axis_label=key), 'left')
     g.yaxis.visible = True
+
+    range_tool = RangeTool(x_range=g.x_range)
     
     for i, key in enumerate(list_of_keys):
         select.extra_y_ranges[key + '_axis'] = Range1d(start=min(mpg[key]), end=max(mpg[key]))
@@ -123,6 +116,8 @@ def range_plotter(list_of_keys):
         select.add_layout(LinearAxis(y_range_name=(key+'_axis'), axis_label=key), 'left')
     select.ygrid.grid_line_color = None
     select.add_tools(range_tool)
+    range_tool.overlay.fill_color = "navy"
+    range_tool.overlay.fill_alpha = 0.2
     select.toolbar.active_multi = range_tool
 
 LABELS = ['timestamp_ms', 'ax', 'ay', 'az', 'gx', 'gy', 'gz', 'mx', 'my', 'mz',
