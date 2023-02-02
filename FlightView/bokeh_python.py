@@ -1,9 +1,7 @@
-import itertools
-import numpy as np
 import pandas as pd
-from bokeh.io import show
-from bokeh.plotting import figure, show, curdoc
+from bokeh.plotting import figure, curdoc
 from bokeh.palettes import Dark2_5 as palette
+from bokeh.palettes import Spectral6
 from bokeh.layouts import column, row
 from bokeh.models import (ColumnDataSource, DataTable, HoverTool, IntEditor,
                           NumberEditor, NumberFormatter, SelectEditor,
@@ -11,40 +9,42 @@ from bokeh.models import (ColumnDataSource, DataTable, HoverTool, IntEditor,
                           Legend, RangeTool, Range1d, LinearAxis, Button,
                           CheckboxGroup, CustomJS)
 
+"""Start of Table/Filtering Tool"""
+
 # Load the flight data from the CSV file
-mpg = pd.read_csv("https://raw.githubusercontent.com/ISSUIUC/flight-data/master/20221029/flight_computer.csv")
+df = pd.read_csv("https://raw.githubusercontent.com/ISSUIUC/flight-data/master/20221029/flight_computer.csv")
 
 #Create a ColumnDataSource from the flight data
-source = ColumnDataSource(mpg)
+source = ColumnDataSource(df)
 
-timearr = mpg['timestamp_ms'].div(10000)
+timearr = df['timestamp_ms'].div(10000)
 
-axs = sorted(mpg["ax"].unique())
-ays = sorted(mpg["ay"].unique())
-azs = sorted(mpg["az"].unique())
-time = sorted(mpg["timestamp_ms"].unique())
-
+axs = sorted(df["ax"].unique())
+ays = sorted(df["ay"].unique())
+azs = sorted(df["az"].unique())
+time = sorted(df["timestamp_ms"].unique())
 
 columns = [
-    TableColumn(field="ax", title="axs",
+    TableColumn(field="ax", title="Acceleration in X-Direction",
                 editor=NumberEditor(step=0.1), formatter=NumberFormatter(format="0.0000")),
-    TableColumn(field="ay", title="ays",
+    TableColumn(field="ay", title="Acceleration in Y-Direction",
                 editor=NumberEditor(step=0.1), formatter=NumberFormatter(format="0.0000")),
-    TableColumn(field="az", title="azs",
+    TableColumn(field="az", title="Acceleration in Z-Direction",
                 editor=NumberEditor(step=0.1), formatter=NumberFormatter(format="0.0000")),
-    TableColumn(field="timestamp_ms", title="timestamp_ms",
-                editor=NumberEditor(step=0.1), formatter=NumberFormatter(format="0.0000")),    
+    TableColumn(field="timestamp_ms", title="Time (ms)",
+                editor=NumberEditor(step=0.1), formatter=NumberFormatter(format="0.0000")),
 ]
 
-data_table = DataTable(source=source, columns=columns, editable=True, width=800,
+
+data_table = DataTable(source=source, columns=columns, editable=True, width=1600,
                        index_position=-1, index_header="row index", index_width=60)
 
-p = figure(width=800, height=300, tools="pan,wheel_zoom,xbox_select,reset", active_drag="xbox_select")
-p.circle(x="index", y="ax", fill_color="#396285", size=8, alpha=0.5, source=source)
-ay = p.circle(x="index", y="ay", fill_color="#CE603D", size=8, alpha=0.5, source=source)
+p = figure(width=1600, height=500, tools="pan,wheel_zoom,xbox_select,reset", active_drag="xbox_select",
+           x_axis_label="Time (ms)", y_axis_label="Acceleration")
 
-ax = p.circle(x="index", y="ax", fill_color="#396285", size=8, alpha=0.5, source=source)
-ay = p.circle(x="index", y="ay", fill_color="#CE603D", size=8, alpha=0.5, source=source)
+ax = p.circle(x="index", y="ax", fill_color= Spectral6[1], size=4, alpha=0.5, source=source)
+ay = p.circle(x="index", y="ay", fill_color= Spectral6[3], size=4, alpha=0.5, source=source)
+az = p.circle(x="index", y="az", fill_color= Spectral6[5], size=4, alpha=0.5, source=source)
 
 tooltips = [
     ("ax", "@ax"),
@@ -55,40 +55,33 @@ tooltips = [
 
 cty_hover_tool = HoverTool(renderers=[ax], tooltips=tooltips + [("time", "@time")])
 hwy_hover_tool = HoverTool(renderers=[ay], tooltips=tooltips + [("ax", "@ax")])
-p.add_tools(cty_hover_tool, hwy_hover_tool)
 
-
-# Create a ColumnDataSource for the ax, ay, and az
-source_relevent = ColumnDataSource(data={
-    'a': np.arange(len(mpg['ax'])),
-    'x': mpg['ax'],
-    'y': mpg['ay'],
-    'z': mpg['az']
-})
 
 # Create a figure with three line plots: ax, ay, and az
-f = figure(width=800, height=400)
-f.line('a', 'y', source=source_relevent, legend_label='ax')
-f.line('a', 'z', source=source_relevent, legend_label='ay', line_color='green')
-f.line('a', 'x', source=source_relevent, legend_label='az', line_color='red')
+# p = figure(width=800, height=300, tools="pan,wheel_zoom,xbox_select,reset", active_drag="xbox_select")
+# p.line(x="index", y="ax", source=source, legend_label='ax')
+# p.line(x="index", y="ay", source=source, legend_label='ay', line_color='green')
+# p.line(x="index", y="az", source=source, legend_label='az', line_color='red')
+
 
 # Create a legend and add the 'legend_hide' feature
 legend = Legend(items=[
-    ('ax', [f.renderers[0]]),
-    ('ay', [f.renderers[1]]),
-    ('az', [f.renderers[2]])
+    ('ax', [p.renderers[0]]),
+    ('ay', [p.renderers[1]]),
+    ('az', [p.renderers[2]])
 ], location='top_left')
 legend.click_policy = 'hide'
-f.add_layout(legend, 'left')
+p.add_layout(legend, 'left')
+
+"""Start of Range Tool"""
 
 #make altitude and mx plot
-time_data = mpg['timestamp_ms']
-alt_data = mpg['barometer_altitude']
-mx_data = mpg['mx']
-my_data = mpg['my']
-source = ColumnDataSource(mpg)
+time_data = df['timestamp_ms']
+alt_data = df['barometer_altitude']
+mx_data = df['mx']
+my_data = df['my']
 
-g = figure(height=300, width=1600, tools="xpan", toolbar_location=None,
+g = figure(height=300, width=1600, tools="poly_select,pan,wheel_zoom,xbox_select,reset,xpan",
            x_axis_type="datetime", x_axis_location="above",
            background_fill_color="#efefef", x_range=(time_data[1500], time_data[2500]))
 
@@ -100,18 +93,19 @@ select = figure(title="Drag the middle and edges of the selection box to change 
 
 #define a range plotter that will take a list of keys and a csv and create plots
 def range_plotter(list_of_keys):
-    
+
     g.extra_y_ranges = {}
     for i, key in enumerate(list_of_keys):
-        g.extra_y_ranges[key + '_axis'] = Range1d(start=min(mpg[key]) - 0.1*(max(mpg[key]) - min(mpg[key])), end=max(mpg[key]) + 0.1*(max(mpg[key]) - min(mpg[key])))
+        g.extra_y_ranges[key + '_axis'] = Range1d(start=min(df[key]) - 0.1*(max(df[key]) - min(df[key])), end=max(df[key]) + 0.1*(max(df[key]) - min(df[key])))
         g.line('timestamp_ms', key, source=source, color=palette[i], y_range_name=(key+'_axis'))
         g.add_layout(LinearAxis(y_range_name=(key+'_axis'), axis_label=key), 'left')
     g.yaxis.visible = True
 
     range_tool = RangeTool(x_range=g.x_range)
+
     
     for i, key in enumerate(list_of_keys):
-        select.extra_y_ranges[key + '_axis'] = Range1d(start=min(mpg[key]), end=max(mpg[key]))
+        select.extra_y_ranges[key + '_axis'] = Range1d(start=min(df[key]), end=max(df[key]))
         select.line('timestamp_ms', key, source=source, color=palette[i], y_range_name=(key+'_axis'))
         select.add_layout(LinearAxis(y_range_name=(key+'_axis'), axis_label=key), 'left')
     select.ygrid.grid_line_color = None
@@ -128,13 +122,15 @@ LABELS = ['timestamp_ms', 'ax', 'ay', 'az', 'gx', 'gy', 'gz', 'mx', 'my', 'mz',
        'state_est_ax', 'state_est_apo', 'battery_voltage']
 
 checkbox_group = CheckboxGroup(labels=LABELS)
-def update(attr, old, new):
+def update():
     # Get the list of active keys
     active_keys = [checkbox_group.labels[i] for i in 
                         checkbox_group.active]
-    
     range_plotter(active_keys)
-checkbox_group.on_change('active', update)
+
+
+button = Button(label="Update Plots")
+button.on_event('button_click', update)
 
 # put the button and plot in a layout and add to the document
-curdoc().add_root(column(data_table, row(p,f), column(g,select,checkbox_group)))
+curdoc().add_root(column(data_table, p, column(g,select,row(checkbox_group, button))))
