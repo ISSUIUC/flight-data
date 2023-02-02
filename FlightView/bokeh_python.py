@@ -8,7 +8,7 @@ from bokeh.models import (ColumnDataSource, DataTable, HoverTool, IntEditor,
                           NumberEditor, NumberFormatter, SelectEditor,
                           StringEditor, StringFormatter, TableColumn,
                           Legend, Label, RangeTool, Range1d, LinearAxis, Button,
-                          CheckboxGroup, CustomJS)
+                          CheckboxGroup, CustomJS, TapTool)
 
 """Start of Table/Filtering Tool"""
 
@@ -20,9 +20,9 @@ source = ColumnDataSource(df)
 
 timearr = df['timestamp_ms'].div(10000)
 
-axs = sorted(df["ax"].unique())
-ays = sorted(df["ay"].unique())
-azs = sorted(df["az"].unique())
+axs = sorted(df["highg_ax"].unique())
+ays = sorted(df["highg_ay"].unique())
+azs = sorted(df["highg_az"].unique())
 time = sorted(df["timestamp_ms"].unique())
 
 columns = [
@@ -48,6 +48,10 @@ p.title_location = "above"
 ax = p.circle(x="index", y="ax", fill_color= Spectral6[1], size=4, alpha=0.5, source=source)
 ay = p.circle(x="index", y="ay", fill_color= Spectral6[3], size=4, alpha=0.5, source=source)
 az = p.circle(x="index", y="az", fill_color= Spectral6[5], size=4, alpha=0.5, source=source)
+
+# taptool = p.select(type=TapTool)
+# taptool.behavior = 'inspect' # 'inspect', 'select'
+
 
 tooltips = [
     ("ax", "@ax"),
@@ -130,6 +134,14 @@ def update():
                         checkbox_group.active]
     range_plotter(active_keys)
 
+# Define the callback to update the visibility of the line
+# callback = CustomJS(args=dict(line=line, checkbox=checkbox), code="""""
+# if (checkbox.active.includes(0)) {
+#     line.visible = false;
+# } else {
+#     line.visible = true;
+# }
+# """)
 
 button = Button(label="Update Plots", width=300, height=50)
 button.on_event('button_click', update)
