@@ -150,6 +150,20 @@ logo = figure(x_range=(0,1), y_range=(0,1), width=700, tools="", toolbar_locatio
 logo.axis.visible = False
 logo.image_url(url=['https://scontent-ord5-1.xx.fbcdn.net/v/t39.30808-6/307314995_392750989713187_3386142925000647721_n.png?_nc_cat=100&ccb=1-7&_nc_sid=09cbfe&_nc_ohc=0YlXwyA-wtYAX8HdwIF&_nc_ht=scontent-ord5-1.xx&oh=00_AfBSwkWyETT0oW8zuxhoDE2TUovpF9wNI4k5Mr0HBYSHMw&oe=63E033B5'], x=0, y=1, w=1, h=1)
 
-# put the button and plot in a layout and add to the document
-curdoc().add_root(column(p,data_table,column(g,select,row(checkbox_group, logo), button), background='black'))
+
+def reset():
+    checkbox_group.active = []
+    g.x_range.start = 0
+    g.x_range.end = 100
+    for key in list(g.extra_y_ranges.keys()):
+        g.extra_y_ranges.pop(key)
+        g.renderers.pop(g.renderers.index(g.select(dict(y_range_name=key))))
+
+reset_button = Button(label="Reset Plots", width=300, height=50)
+reset_button.on_event('button_click', reset)
+
+
+# put the reset button in the same layout as the update button and add to the document
+curdoc().add_root(column(p,data_table,column(g,select,row(checkbox_group, logo, reset_button), button), background='black'))
 curdoc().theme = 'dark_minimal'
+
