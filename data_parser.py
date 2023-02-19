@@ -29,7 +29,7 @@ start: top_level*
 
 ?top_level: struct | templated_struct | templated_substituted_struct | enum | function
 
-function: type IDENTIFIER parenthesized block
+function: type IDENTIFIER parenthesized "const"? block
 
 template: "template" "<" _template_param_list ">"
 _template_param_list: ((template_param ",")* template_param)?
@@ -42,7 +42,7 @@ struct: "struct" IDENTIFIER struct_items ";"
 struct_items: "{" struct_item* "}"
 struct_item: decl ("=" const_expr)? ";" -> field
            | IDENTIFIER parenthesized initializer_list block -> constructor
-           | type IDENTIFIER parenthesized block -> method
+           | type IDENTIFIER parenthesized "const"? block -> method
 
 decl: type IDENTIFIER ("[" const_expr "]")*
 
@@ -573,6 +573,15 @@ BASE_TEMPLATES: dict[str, Template] = {}
 BASE_CTXT = Context(BASE_NAMES, BASE_TYPES, BASE_TEMPLATES)
 
 
+def preprocess(t: str) -> str:
+    a = t.splitlines()
+    r = []
+    for l in a:
+        if not l.startswith("#"):
+            r.append(l)
+    return "\n".join(r)
+
+
 def render_bytes(n: int) -> str:
     """
     A helper function which makes a number of bytes prettier by appending units.
@@ -619,7 +628,7 @@ def main():
     with args.header.open("r") as f:
         text = f.read()
     # parse the text into an AST made of lark.Tree and lark.Token
-    tree = parser.parse(text)
+    tree = parser.parse(preprocess(text))
     # create the global namespace, containing the default types like `bool` and `int`
     ctxt = BASE_CTXT.clone()
     # create the base Calculate instance for the global namespace, then run it for the AST given
