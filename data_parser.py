@@ -42,7 +42,7 @@ struct: "struct" IDENTIFIER struct_items ";"
 struct_items: "{" struct_item* "}"
 struct_item: decl ("=" const_expr)? ";" -> field
            | IDENTIFIER parenthesized initializer_list block -> constructor
-           | type IDENTIFIER parenthesized block -> method
+           | type IDENTIFIER parenthesized "const"? block -> method
 
 decl: type IDENTIFIER ("[" const_expr "]")*
 
@@ -209,6 +209,7 @@ class Enum(Type):
     def parse(self, data: bytes):
         as_int = struct.unpack("i", data)[0]
         # having accessed the integer value, we map it to its name, which is stored in the `variants` field
+        # return as_int
         return self.variants[as_int]
 
     def __eq__(self, other):
@@ -611,6 +612,14 @@ def get_arguments():
     return args
 
 
+def preprocess(t: str) -> str:
+    l = []
+    for line in t.splitlines():
+        if not line.startswith("#"):
+            l.append(line)
+    return "\n".join(l)
+
+
 def main():
     args = get_arguments()
 
@@ -619,7 +628,7 @@ def main():
     with args.header.open("r") as f:
         text = f.read()
     # parse the text into an AST made of lark.Tree and lark.Token
-    tree = parser.parse(text)
+    tree = parser.parse(preprocess(text))
     # create the global namespace, containing the default types like `bool` and `int`
     ctxt = BASE_CTXT.clone()
     # create the base Calculate instance for the global namespace, then run it for the AST given
