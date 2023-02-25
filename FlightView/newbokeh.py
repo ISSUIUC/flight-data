@@ -8,15 +8,17 @@ data = pd.read_csv("https://raw.githubusercontent.com/ISSUIUC/flight-data/master
 
 # Create a list to store the line plots for each column
 plots = []
-
+data["timestamp_ms"] = data["timestamp_ms"] - 1945435
 # Loop through each column in the dataset
 for col in data.columns:
     # Convert the Series object to a list
     y_values = data[col].tolist()
     # Create a line plot for the current column
-    line_plot = dict(x=data["timestamp_ms"], y=y_values, type="scatter", mode="lines", name=col)
+    line_plot = dict(x=data["timestamp_ms"], y=y_values, type="scatter", mode="lines", name=col,
+                     hovertemplate="%{y:.2f}")
     # Add the line plot to the plots list
     plots.append(line_plot)
+
 
 # Create a figure with the line plots
 fig = go.Figure(data=plots, layout=dict(title="Flight Data"))
@@ -33,7 +35,7 @@ fig.update_layout(
 fig["layout"]["xaxis"] = dict(
     rangeselector=dict(),
     rangeslider=dict(visible=True),
-    type="date",
+    tickformat="%H:%M:%S.%L", # Set the tick format to display the timestamp values as hour:minute:second.millisecond
 )
 
 # Set the background color to black
