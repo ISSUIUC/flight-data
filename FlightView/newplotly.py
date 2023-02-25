@@ -25,9 +25,9 @@ fig["layout"]["xaxis"] = dict(
     rangeselector=dict(
         buttons=list(
             [
-                dict(count=2, label="5m", step="minute", stepmode="backward"),
-                dict(count=3, label="10m", step="minute", stepmode="backward"),
-                dict(count=4, label="15m", step="minute", stepmode="backward"),
+                dict(count=2, label="2m", step="minute", stepmode="backward"),
+                dict(count=3, label="3m", step="minute", stepmode="backward"),
+                dict(count=4, label="4m", step="minute", stepmode="backward"),
                 dict(step="all"),
             ]
         )
@@ -50,3 +50,47 @@ fig = pio.from_json(js_code)
 
 # Write the figure to an HTML file
 pio.write_html(fig, 'plotly_figure.html')
+
+# Add image and heading to HTML file
+with open('plotly_figure.html', 'r') as f:
+    html_content = f.read()
+
+image_url1 = 'https://raw.githubusercontent.com/ISSUIUC/flight-data/FligthView-Bug/FlightView/307314995_392750989713187_3386142925000647721_n-removebg-preview.png'
+image_tag1 = f'<img src="{image_url1}" width="200" height="175">'
+image_url2 = 'https://raw.githubusercontent.com/ISSUIUC/flight-data/FligthView-Bug/FlightView/flight_view_logo.jpeg'
+image_tag2 = f'<img src="{image_url2}" width="500" height="175">'
+
+# Set the background color to black
+fig.update_layout(
+    plot_bgcolor='black',
+    paper_bgcolor='black'
+)
+
+
+# Set the FlightView title
+new_html_content = f'''
+<html>
+<head>
+    <title>FlightView</title>
+    <style>
+        body {{
+            background-color: black;
+        }}
+        h1 {{
+            font-family: 'Exo', sans-serif;
+            color: red;
+        }}
+    </style>
+</head>
+<body>
+    {image_tag1}
+    {image_tag2}
+    {html_content}
+</body>
+</html>
+'''
+
+
+# Write the modified HTML file
+with open('plotly_figure.html', 'w') as f:
+    f.write(new_html_content)

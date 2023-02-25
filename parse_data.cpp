@@ -170,10 +170,8 @@ int main(int argc, char ** argv) {
         std::cout << "usage: inputfile outputfile" << std::endl;
         return 1;
     }
-
     std::ifstream input{argv[1], std::ios::binary};
     std::ofstream output{argv[2]};
-
     auto header = "binary logging of sensor_data_t";
     char buff[1024];
     output

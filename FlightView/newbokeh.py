@@ -1,6 +1,7 @@
 import plotly.express as px
 import pandas as pd
 import plotly.io as pio
+import plotly.graph_objects as go
 
 # Read the dataset from the URL
 data = pd.read_csv("https://raw.githubusercontent.com/ISSUIUC/flight-data/master/20221029/flight_computer.csv")
@@ -18,23 +19,27 @@ for col in data.columns:
     plots.append(line_plot)
 
 # Create a figure with the line plots
-fig = dict(data=plots, layout=dict(title="Flight Data"))
+fig = go.Figure(data=plots, layout=dict(title="Flight Data"))
+
+# Update legend and graph font color to white
+fig.update_layout(
+    legend=dict(
+        font=dict(color="white")
+    ),
+    font=dict(color="white")
+)
 
 # Add range slider to the figure
 fig["layout"]["xaxis"] = dict(
-    rangeselector=dict(
-        buttons=list(
-            [
-                dict(count=1, label="1d", step="day", stepmode="backward"),
-                dict(count=7, label="1w", step="day", stepmode="backward"),
-                dict(count=1, label="1m", step="month", stepmode="backward"),
-                dict(count=6, label="6m", step="month", stepmode="backward"),
-                dict(step="all"),
-            ]
-        )
-    ),
+    rangeselector=dict(),
     rangeslider=dict(visible=True),
     type="date",
+)
+
+# Set the background color to black
+fig.update_layout(
+    plot_bgcolor='black',
+    paper_bgcolor='black'
 )
 
 # Export the figure as JavaScript
@@ -51,3 +56,39 @@ fig = pio.from_json(js_code)
 
 # Write the figure to an HTML file
 pio.write_html(fig, 'plotly_figure.html')
+
+# Add image and heading to HTML file
+with open('plotly_figure.html', 'r') as f:
+    html_content = f.read()
+
+image_url1 = 'https://raw.githubusercontent.com/ISSUIUC/flight-data/FligthView-Bug/FlightView/iss%20logo.png'
+image_tag1 = f'<img src="{image_url1}" width="200" height="175">'
+image_url2 = 'https://raw.githubusercontent.com/ISSUIUC/flight-data/FligthView-Bug/FlightView/flight_view_logo.jpeg'
+image_tag2 = f'<img src="{image_url2}" width="500" height="175">'
+
+# Set the FlightView title
+new_html_content = f'''
+<html>
+<head>
+    <title>FlightView</title>
+    <style>
+        body {{
+            background-color: black;
+        }}
+        h1 {{
+            font-family: 'Exo', sans-serif;
+            color: red;
+        }}
+    </style>
+</head>
+<body>
+    {image_tag1}
+    {image_tag2}
+    {html_content}
+</body>
+</html>
+'''
+
+# Write the modified HTML file
+with open('plotly_figure.html', 'w') as f:
+    f.write(new_html_content)
