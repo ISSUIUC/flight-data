@@ -210,6 +210,7 @@ class Enum(Type):
     def parse(self, data: bytes):
         as_int = struct.unpack("i", data)[0]
         # having accessed the integer value, we map it to its name, which is stored in the `variants` field
+        # return as_int
         return self.variants[as_int]
 
     def __eq__(self, other):
@@ -619,6 +620,14 @@ def get_arguments():
         raw_path: pathlib.Path = args.raw
         args.out = raw_path.with_suffix(".json")
     return args
+
+
+def preprocess(t: str) -> str:
+    l = []
+    for line in t.splitlines():
+        if not line.startswith("#"):
+            l.append(line)
+    return "\n".join(l)
 
 
 def main():
