@@ -40,7 +40,7 @@ templated_substituted_struct: template "struct" IDENTIFIER "<" template_args ">"
 struct: "struct" IDENTIFIER struct_items ";"
 
 struct_items: "{" struct_item* "}"
-struct_item: decl ("=" const_expr)? ";" -> field
+struct_item: decl (("=" const_expr) | "{" "}")? ";" -> field
            | IDENTIFIER parenthesized initializer_list block -> constructor
            | type IDENTIFIER parenthesized "const"? block -> method
 
@@ -78,11 +78,12 @@ template_args: (template_arg ("," template_arg)*)?
 IDENTIFIER: /[a-zA-Z_][a-zA-Z_0-9]*/
 
 DECIMAL: /[0-9]+/
+FLOAT: /[0-9]+.[0-9]+/
 BINARY: /0b[0-9]+/
 HEX: /0x[0-9]+/
 OCT: /0o[0-9]+/
 
-number: DECIMAL | BINARY | HEX | OCT
+number: DECIMAL | BINARY | HEX | OCT | FLOAT
 
 TOKEN: IDENTIFIER
      | STRING
