@@ -13,6 +13,7 @@ Steps to use this wonderful software:
 
 from __future__ import annotations
 
+import json
 from abc import ABC, abstractmethod
 from typing import Callable
 
@@ -575,15 +576,6 @@ BASE_TEMPLATES: dict[str, Template] = {}
 BASE_CTXT = Context(BASE_NAMES, BASE_TYPES, BASE_TEMPLATES)
 
 
-def preprocess(t: str) -> str:
-    a = t.splitlines()
-    r = []
-    for l in a:
-        if not l.startswith("#"):
-            r.append(l)
-    return "\n".join(r)
-
-
 def render_bytes(n: int) -> str:
     """
     A helper function which makes a number of bytes prettier by appending units.
@@ -673,7 +665,7 @@ def main():
                 f_out.write("\n")
                 prev = True
             # write the json to the output file
-            f_out.write(repr(out))
+            f_out.write(json.dumps(out))
             # displays the progress
             print(f"\rParsed {render_bytes(idx)}/{render_bytes(len(all_data))} bytes", end="", flush=True)
         f_out.write("\n]")
