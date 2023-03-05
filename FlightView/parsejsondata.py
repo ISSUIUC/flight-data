@@ -8,7 +8,7 @@ with open('data91.json') as f:
 # The data variable now contains the contents of the JSON file as a dictionary
 # You can access individual values using keys:
 #doc = pd.read_csv('/Users/aadityavoruganti/ISS/FlightaViea/flight-data/raw_csv.csv')
-#"has_magnetometer_data": true, "magnetometer_data": {"magnetometer": {"mx": -0.14513300359249115, "my": 0.3852674663066864, "mz": -0.8463899493217468}, "timestamp": 4293}, "has_gas_data": false, "gas_data": {"temp": 0.0, "humidity": 0.0, "pressure": 0, "resistance": 0, "timestamp": 0}},
+#"has_kalman_data": false, "kalman_data": {"kalman_pos_x": 0.0, "kalman_vel_x": 0.0, "kalman_acc_x": 0.0, "kalman_pos_y": 0.0, "kalman_vel_y": 0.0, "kalman_acc_y": 0.0, "kalman_pos_z": 0.0, "kalman_vel_z": 0.0, "kalman_acc_z": 0.0, "kalman_apo": 0.0, "timeStamp_state": 0}, "has_rocketState_data": true, "rocketState_data": {"rocketStates": ["STATE_IDLE", "STATE_INIT", "STATE_IDLE", "STATE_IDLE"], "timestamp": 144
 
 def to_ms(timestamp):
     return timestamp // 100
