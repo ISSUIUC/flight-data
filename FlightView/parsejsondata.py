@@ -68,10 +68,15 @@ def reformat(output_file, doc, step, start_time, end_time):
     magnet_mx = [item["magnetometer_data"]["magnetometer"]["mx"] for item in doc]
     magnet_my = [item["magnetometer_data"]["magnetometer"]["my"] for item in doc]
     magnet_mz = [item["magnetometer_data"]["magnetometer"]["mz"] for item in doc]
+    gas_temp = [item["gas_data"]["temp"] for item in doc]
+    gas_humidity = [item["gas_data"]["humidity"]["mz"] for item in doc]
+    gas_pressure = [item["gas_data"]["pressure"]["mz"] for item in doc]
+    gas_resistance = [item["gas_data"]["resistance"]["mz"] for item in doc]
     #fsm_timestamp = [item["rocketState_data.timeStamp_RS"] for item in doc]
     flap_timestamp = [item["flap_data"]["timeStamp_flaps"] for item in doc]
     bno_timestamp = [item["orientation_data"]["timeStamp_orientation"] for item in doc]
     magnet_timestamp = [item["magnetometer_data"]["timestamp"] for item in doc]
+    gas_timestamp = [item["gas_data"]["timestamp"] for item in doc]
     #state_timestamp = [item["state_data"]["timestamp"] for item in doc]
     #has_state_data = [item["has_state_data"] for item in doc]
     #state_x = [item["state_data.state_x"] for item in doc]
@@ -83,6 +88,8 @@ def reformat(output_file, doc, step, start_time, end_time):
     has_voltage_data = [int(item["has_voltage_data"]) for item in doc]
     has_bno_data = [int(item["has_orientation_data"]) for item in doc]
     has_magnetometer_data = [int(item["has_magnetometer_data"]) for item in doc]
+    has_gas_data = [int(item["has_gas_data"])for item in doc]
+
 
 
     with open(output_file, 'w', newline='') as file:
@@ -92,8 +99,8 @@ def reformat(output_file, doc, step, start_time, end_time):
                             "temperature", "pressure", "barometer_altitude", "highg_ax", "highg_ay", "highg_az",
                             "extension", "voltage_battery","bno_ax","bno_ay","bno_az","bno_gx", "bno_gy", "bno_gz"
                             , "bno_mx", "bno_my","bno_mz", "bno_yaw", "bno_pitch", "bno_roll","magnet_mx",
-                            "magnet_my","magnet_mz"])
-            gps_index, lowg_index, baro_index, fsm_index, flap_index, highg_index, voltage_index, state_index,bno_index,magnet_index = 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+                            "magnet_my","magnet_mz", "gas_temp", "gas_pressure", "gas_humidity", "gas_resistance"])
+            gps_index, lowg_index, baro_index, fsm_index, flap_index, highg_index, voltage_index, state_index,bno_index,magnet_index,gas_index = 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
             for time in range(start_time, end_time, step):
                 gps_index = find_next_index(gps_index, time, gps_timestamp, has_gps_data)
                 lowg_index = find_next_index(lowg_index, time, lowG_timestamp, has_lowG_data)
@@ -105,7 +112,8 @@ def reformat(output_file, doc, step, start_time, end_time):
                 voltage_index = find_next_index(voltage_index, time, voltage_timestamp, has_voltage_data)
                 bno_index = find_next_index(bno_index,time,bno_timestamp,has_bno_data)
                 magnet_index = find_next_index(magnet_index,time,magnet_timestamp,has_magnetometer_data)
-                print(ax[lowg_index])
+                gas_index = find_next_index(gas_index,time,gas_timestamp, has_gas_data)
+
 
                 writer.writerow([time,
                                 ax[lowg_index], ay[lowg_index], az[lowg_index],
@@ -117,7 +125,8 @@ def reformat(output_file, doc, step, start_time, end_time):
                                 extension[flap_index], voltage_battery[voltage_index], bno_ax[bno_index],bno_ay[bno_index],
                                 bno_az[bno_index], bno_gx[bno_index], bno_gy[bno_index],bno_gz[bno_index],bno_mx[bno_index]
                                 ,bno_my[bno_index], bno_mz[bno_index], bno_yaw[bno_index], bno_pitch[bno_index], 
-                                bno_roll[bno_index], magnet_mx[magnet_index],magnet_my[magnet_index],magnet_mz[magnet_index]])          
+                                bno_roll[bno_index], magnet_mx[magnet_index],magnet_my[magnet_index],magnet_mz[magnet_index],
+                                gas_temp[gas_index], gas_pressure[gas_index], gas_humidity[gas_index], gas_resistance[gas_index]])          
 
 
 reformat("flightcomputer.csv", doc, 10, 0, 29300)
