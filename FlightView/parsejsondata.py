@@ -72,13 +72,14 @@ def reformat(output_file, doc, step, start_time, end_time):
     gas_humidity = [item["gas_data"]["humidity"] for item in doc]
     gas_pressure = [item["gas_data"]["pressure"] for item in doc]
     gas_resistance = [item["gas_data"]["resistance"] for item in doc]
+    rocket_state = [item["rocketState_data"]["rocketStates"] for item in doc]
     #fsm_timestamp = [item["rocketState_data.timeStamp_RS"] for item in doc]
     flap_timestamp = [item["flap_data"]["timeStamp_flaps"] for item in doc]
     bno_timestamp = [item["orientation_data"]["timeStamp_orientation"] for item in doc]
     magnet_timestamp = [item["magnetometer_data"]["timestamp"] for item in doc]
     gas_timestamp = [item["gas_data"]["timestamp"] for item in doc]
-    #state_timestamp = [item["state_data"]["timestamp"] for item in doc]
-    #has_state_data = [item["has_state_data"] for item in doc]
+    state_timestamp = [item["rocketState_data"]["timestamp"] for item in doc]
+    has_state_data = [int(item["has_rocketState_data"]) for item in doc]
     #state_x = [item["state_data.state_x"] for item in doc]
     #state_vx = [item["state_data.state_vx"] for item in doc]
     #state_ax = [item["state_data.state_ax"] for item in doc]
@@ -113,6 +114,8 @@ def reformat(output_file, doc, step, start_time, end_time):
                 bno_index = find_next_index(bno_index,time,bno_timestamp,has_bno_data)
                 magnet_index = find_next_index(magnet_index,time,magnet_timestamp,has_magnetometer_data)
                 gas_index = find_next_index(gas_index,time,gas_timestamp, has_gas_data)
+                state_index = find_next_index(state_index,time, state_timestamp,has_state_data)
+                print(rocket_state[state_index])
 
 
                 writer.writerow([time,
