@@ -2,14 +2,14 @@ import csv
 import json
 
 # Open the JSON file and load its contents into a variable called data
-with open('data91.json') as f:
+with open('/Users/aadityavoruganti/ISS/fligthview/GitHub/flight-data/FlightView/data30.json') as f:
     doc = json.load(f)
 
 # The data variable now contains the contents of the JSON file as a dictionary
 # You can access individual values using keys:
 #doc = pd.read_csv('/Users/aadityavoruganti/ISS/FlightaViea/flight-data/raw_csv.csv')
 #"has_kalman_data": false, "kalman_data": {"kalman_pos_x": 0.0, "kalman_vel_x": 0.0, "kalman_acc_x": 0.0, "kalman_pos_y": 0.0, "kalman_vel_y": 0.0, "kalman_acc_y": 0.0, "kalman_pos_z": 0.0, "kalman_vel_z": 0.0, "kalman_acc_z": 0.0, "kalman_apo": 0.0, "timeStamp_state": 0}, "has_rocketState_data": true, "rocketState_data": {"rocketStates": ["STATE_IDLE", "STATE_INIT", "STATE_IDLE", "STATE_IDLE"], "timestamp": 144
-
+# "has_rocketState_data": true, "rocketState_data": {"rocketStates": ["STATE_IDLE", "STATE_INIT", "STATE_IDLE", "STATE_IDLE"], "timestamp": 173}
 def to_ms(timestamp):
     return timestamp // 100
 
@@ -91,6 +91,8 @@ def reformat(output_file, doc, step, start_time, end_time):
     has_magnetometer_data = [int(item["has_magnetometer_data"]) for item in doc]
     has_gas_data = [int(item["has_gas_data"])for item in doc]
 
+    
+
 
 
     with open(output_file, 'w', newline='') as file:
@@ -100,7 +102,7 @@ def reformat(output_file, doc, step, start_time, end_time):
                             "temperature", "pressure", "barometer_altitude", "highg_ax", "highg_ay", "highg_az",
                             "extension", "voltage_battery","bno_ax","bno_ay","bno_az","bno_gx", "bno_gy", "bno_gz"
                             , "bno_mx", "bno_my","bno_mz", "bno_yaw", "bno_pitch", "bno_roll","magnet_mx",
-                            "magnet_my","magnet_mz", "gas_temp", "gas_pressure", "gas_humidity", "gas_resistance"])
+                            "magnet_my","magnet_mz", "gas_temp", "gas_pressure", "gas_humidity", "gas_resistance", "flight_states"])
             gps_index, lowg_index, baro_index, fsm_index, flap_index, highg_index, voltage_index, state_index,bno_index,magnet_index,gas_index = 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
             for time in range(start_time, end_time, step):
                 gps_index = find_next_index(gps_index, time, gps_timestamp, has_gps_data)
@@ -115,7 +117,6 @@ def reformat(output_file, doc, step, start_time, end_time):
                 magnet_index = find_next_index(magnet_index,time,magnet_timestamp,has_magnetometer_data)
                 gas_index = find_next_index(gas_index,time,gas_timestamp, has_gas_data)
                 state_index = find_next_index(state_index,time, state_timestamp,has_state_data)
-                print(rocket_state[state_index])
 
 
                 writer.writerow([time,
@@ -129,7 +130,7 @@ def reformat(output_file, doc, step, start_time, end_time):
                                 bno_az[bno_index], bno_gx[bno_index], bno_gy[bno_index],bno_gz[bno_index],bno_mx[bno_index]
                                 ,bno_my[bno_index], bno_mz[bno_index], bno_yaw[bno_index], bno_pitch[bno_index], 
                                 bno_roll[bno_index], magnet_mx[magnet_index],magnet_my[magnet_index],magnet_mz[magnet_index],
-                                gas_temp[gas_index], gas_pressure[gas_index], gas_humidity[gas_index], gas_resistance[gas_index]])          
+                                gas_temp[gas_index], gas_pressure[gas_index], gas_humidity[gas_index], gas_resistance[gas_index], rocket_state[state_index]])          
 
 
-reformat("flightcomputer.csv", doc, 10, 0, 29300)
+reformat("flightcomputer.csv", doc, 10, 715000,822962 )
