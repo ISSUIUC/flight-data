@@ -6,6 +6,8 @@ import dash
 import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output
+import streamlit as st
+
 
 # # Read JSON file
 # df = pd.read_json("input_file.json")
@@ -14,7 +16,7 @@ from dash.dependencies import Input, Output
 # df.to_csv("output_file.csv", index=False)
 
 # Read the dataset from the URL
-data = pd.read_csv("flightcomputer.csv")
+data = pd.read_csv("FlightView/flightcomputer.csv")
 
 # Create a list to store the line plots for each column
 plots = []
@@ -64,6 +66,9 @@ table = html.Table(
     }
 )
 
+st.plotly_chart(fig, theme = None)
+
+"""
 # Define the app
 app = dash.Dash(__name__)
 image_url1 = 'https://raw.githubusercontent.com/ISSUIUC/flight-data/FligthView-Bug/FlightView/iss%20logo.png'
@@ -84,4 +89,5 @@ app.layout = html.Div(
 ])
 
 if __name__ == '__main__':
-    app.run_server(debug=True)
+    app.run_server(debug=True, port=5000)
+"""
