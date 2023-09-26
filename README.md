@@ -2,13 +2,13 @@
 Flight data collected from past launches
 
 ## Past Flights
-[20211030](https://github.com/ISSUIUC/flight-data/tree/master/20211030) -- **Endurance, TARS mk2**
-[20220507](https://github.com/ISSUIUC/flight-data/tree/master/20220507) -- **Intrepid I, TARS mk3**
-[20220623](https://github.com/ISSUIUC/flight-data/tree/master/20220623) -- **Intrepid II, TARS mk3**
-[20221029](https://github.com/ISSUIUC/flight-data/tree/master/20221029) -- **Intrepid III, Test Flight 1, TARS mk3.1**
-[20230305](https://github.com/ISSUIUC/flight-data/tree/master/20230305) -- **Intrepid III, Test Flight 2, TARS mk4**
-[20230507](https://github.com/ISSUIUC/flight-data/tree/master/20230507) -- **Stargazer I, COTS**
-[20230621](https://github.com/ISSUIUC/flight-data/tree/master/20230621) -- **Intrepid III, Competition Launch, TARS mk4**
+[20211030](https://github.com/ISSUIUC/flight-data/tree/master/20211030) -- **Endurance, TARS mk2** <br/>
+[20220507](https://github.com/ISSUIUC/flight-data/tree/master/20220507) -- **Intrepid I, TARS mk3** <br/>
+[20220623](https://github.com/ISSUIUC/flight-data/tree/master/20220623) -- **Intrepid II, TARS mk3** <br/>
+[20221029](https://github.com/ISSUIUC/flight-data/tree/master/20221029) -- **Intrepid III, Test Flight 1, TARS mk3.1** <br/>
+[20230305](https://github.com/ISSUIUC/flight-data/tree/master/20230305) -- **Intrepid III, Test Flight 2, TARS mk4** <br/>
+[20230507](https://github.com/ISSUIUC/flight-data/tree/master/20230507) -- **Stargazer I, COTS** <br/>
+[20230621](https://github.com/ISSUIUC/flight-data/tree/master/20230621) -- **Intrepid III, Competition Launch, TARS mk4** <br/>
 
 
 ## Flight Data Decommissioning
