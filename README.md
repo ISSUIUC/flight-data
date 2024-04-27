@@ -1,5 +1,5 @@
 # flight-data
-Flight data collected from past launches
+HAS BEEN MIGRATED TO https://uofi.box.com/s/4tiz5087w0k0o5c8q6ztsot6nda5cbi3 
 
 ## Past Flights
 [20211030](https://github.com/ISSUIUC/flight-data/tree/master/20211030) -- **Endurance, TARS mk2** <br/>
